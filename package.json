@@ -1,0 +1,25 @@
+{
+  "name": "js-99",
+  "version": "1.0.0",
+  "description": "JS-99: Ninety-Nine JavaScript Problems",
+  "scripts": {
+    "build": "webpack",
+    "test": "jest"
+  },
+  "main": "dist/js-99.js",
+  "author": "tetsugi",
+  "license": "MIT",
+  "devDependencies": {
+    "@babel/core": "^7.1.2",
+    "@babel/preset-env": "^7.1.0",
+    "@babel/register": "^7.0.0",
+    "babel-core": "7.0.0-bridge.0",
+    "babel-jest": "^23.6.0",
+    "babel-loader": "^8.0.4",
+    "coveralls": "^3.0.2",
+    "jest": "^23.6.0",
+    "regenerator-runtime": "^0.12.1",
+    "webpack": "^4.20.2",
+    "webpack-cli": "^3.1.2"
+  }
+}
