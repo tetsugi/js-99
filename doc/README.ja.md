@@ -13,7 +13,7 @@
 
 [Node.js](https://nodejs.org/ja/)を使いますので、インストールしてください。  
 インストール後にコンソールを開いて以下のコマンドを実行し、バージョンが表示されればPATHが通っています。  
-執筆時点では、Node.jsは`v8.12.0`、npmは`6.4.1`を使用しています。
+執筆時点では、Node.jsは`v11.0.0`、npmは`6.4.1`を使用しています。
 
 ```sh
 $ node -v
@@ -519,7 +519,7 @@ lfsort(["abc", "de", "fgh", "de", "ijkl", "mn", "o"]) // ["ijkl","o","abc","fgh"
 isPrime(7) // true
 ```
 
-#### 問32: 拡張されたユークリッドの互除法(`gcd`)を実装せよ。
+#### 問32: [ユークリッドの互除法](https://ja.wikipedia.org/wiki/%E3%83%A6%E3%83%BC%E3%82%AF%E3%83%AA%E3%83%83%E3%83%89%E3%81%AE%E4%BA%92%E9%99%A4%E6%B3%95)を使って最大公約数を求める`gcd`関数を実装せよ。
 
 ```js
 gcd(36, 63) // 9
@@ -531,7 +531,7 @@ gcd(36, 63) // 9
 coprime(35, 64) // true
 ```
 
-#### 問34: オイラーのφ関数`totient`を実装せよ。
+#### 問34: [オイラーのφ関数](https://ja.wikipedia.org/wiki/%E3%82%AA%E3%82%A4%E3%83%A9%E3%83%BC%E3%81%AE%CF%86%E9%96%A2%E6%95%B0)`totient`を実装せよ。
 
 ```js
 totient(10) // 4
@@ -573,7 +573,7 @@ phi(10) // 4
 せっかくなので、関数の実行時間を計測する`time`関数を実装して調べましょう。
 
 ```js
-time(totient(10090)) < time(phi(10090)) // true
+time(totient, 10090) < time(phi, 10090) // true
 ```
 
 #### 問39: 与えられた範囲内の素数の配列を返す`primesR`関数を実装せよ。
@@ -1365,6 +1365,238 @@ lfsort(["abc", "de", "fgh", "de", "ijkl", "mn", "o"]) // ["ijkl","o","abc","fgh"
 頻度順にソートするには、前に作ったランレングス圧縮する`encode`関数を使うと楽にできます。長さの配列を昇順ソートしたものをランレングス圧縮しましょう。  
 長さを`key`、頻度を`value`にして`Map`に格納したいので、そのように入れ替えておきます。  
 あとは生成した`Map`から、長さを`key`にして頻度を参照しながらソートすればよいでしょう。
+
+### 問31～41: 算術
+
+#### 問31: 引数が素数かどうかを返す`isPrime`関数を実装せよ。
+
+```js
+const isPrime = (n, loop = 100) => {
+  if (n === 2) return true
+  if (n <= 1 || n % 2 === 0) return false
+
+  let d = (n - 1) >> 1
+  while (d % 2 === 0) { d >>= 1 }
+
+  const pow = (base, power, mod) => {
+    let result = 1
+    
+    while (power > 0) {
+      if (power % 2 === 1) { result = (result * base) % mod }
+      base = (base ** 2) % mod
+      power >>= 1
+    }
+    return result
+  }
+
+  for (let i = 0; i < loop; i++) {
+    const rand = Math.floor(Math.random() * (n - 1) + 1)
+    let t = d
+    let y = pow(rand, t, n)
+
+    while ((t !== (n - 1)) && (y !== 1) && (y !== (n - 1))) {
+      y = (y ** 2) % n
+      t <<= 1
+    }
+
+    if ((y !== (n - 1)) && (t % 2 === 0)) return false
+  }
+
+  return true
+}
+
+isPrime(7) // true
+```
+
+素数判定は[エラトステネスの篩](https://ja.wikipedia.org/wiki/%E3%82%A8%E3%83%A9%E3%83%88%E3%82%B9%E3%83%86%E3%83%8D%E3%82%B9%E3%81%AE%E7%AF%A9)が単純で実装しやすいです。  
+今回は[ミラー–ラビン素数判定法](https://ja.wikipedia.org/wiki/%E3%83%9F%E3%83%A9%E3%83%BC%E2%80%93%E3%83%A9%E3%83%93%E3%83%B3%E7%B4%A0%E6%95%B0%E5%88%A4%E5%AE%9A%E6%B3%95)で実装しました。
+
+解答のコードは、Wikipediaの記事のRubyのコードをJavaScriptに翻訳したものになっています。  
+アルゴリズムに関しては、[アルゴリズムと実行時間](https://ja.wikipedia.org/wiki/%E3%83%9F%E3%83%A9%E3%83%BC%E2%80%93%E3%83%A9%E3%83%93%E3%83%B3%E7%B4%A0%E6%95%B0%E5%88%A4%E5%AE%9A%E6%B3%95#%E3%82%A2%E3%83%AB%E3%82%B4%E3%83%AA%E3%82%BA%E3%83%A0%E3%81%A8%E5%AE%9F%E8%A1%8C%E6%99%82%E9%96%93)を参照してください。  
+ただし、確率的素数判定法なので、極々低確率で素数でないものを素数と判定してしまうことがあります。
+
+補足ですが、`(d & 1) === 0`は`d % 2 === 0`と同じです。奇数は`2n + 1`なので、二進表現の1桁目が0なら偶数、1なら奇数となります。  
+例えば、`0b1011 & 1`は`1`で奇数、`0b1010 & 1`は`0`で偶数となります。  
+JavaScriptでは`&`演算子の優先度が`===`より低いので、使用する際は注意しましょう。
+
+#### 問32: [ユークリッドの互除法](https://ja.wikipedia.org/wiki/%E3%83%A6%E3%83%BC%E3%82%AF%E3%83%AA%E3%83%83%E3%83%89%E3%81%AE%E4%BA%92%E9%99%A4%E6%B3%95)を使って最大公約数を求める`gcd`関数を実装せよ。
+
+```js
+const gcd = (a, b) => b === 0 ? Math.abs(a) : gcd(b, a % b)
+gcd(36, 63) // 9
+```
+
+例えば`a`と`b`の最大公約数を求めるとき`gcd(a, b)`は、
+
+- `b === 0`なら`a`の絶対値を返す
+- そうでないなら次の処理を行う
+  - `b`を新しい`a`とする
+  - `a`を`b`で割った余りを新しい`b`とする
+  - `gcd(a, b)`を呼ぶ
+
+のように実装すればユークリッドの互除法によって最大公約数を求めることができます。  
+`a >= b`である必要がありますが、`a < b`のときは`a`を`b`で割った余りを算出すると`a`になるので、結果的に`a`と`b`を入れ替えて再帰呼び出しすることになります。
+
+#### 問33: 渡した2つの整数が互いに素かどうかを返す`coprime`関数を実装せよ。
+
+```js
+const coprime = (a, b) => gcd(a, b) === 1
+coprime(35, 64) // true
+```
+
+`a`と`b`を共に割り切る整数が`1`のみ、つまり最大公約数が`1`の場合は`a`と`b`が互いに素となっています。  
+問32の`gcd`関数を利用して、戻り値が`1`なら互いに素であると判別します。
+
+#### 問34: [オイラーのφ関数](https://ja.wikipedia.org/wiki/%E3%82%AA%E3%82%A4%E3%83%A9%E3%83%BC%E3%81%AE%CF%86%E9%96%A2%E6%95%B0)`totient`を実装せよ。
+
+```js
+const totient = n => n === 1 ? 1 : [...Array(n - 1)].map((_, i) => i + 1).filter(e => coprime(n, e)).length
+totient(10) // 4
+```
+
+`1`から`n`までの自然数のうち、`n`と互いに素なものの個数がφ関数の戻り値になります。  
+`[...Array(n - 1)].map((_, i) => i + 1)`をすると`1..(n - 1)`の配列が生成できるので、それを`coprime`関数でフィルタしてから要素の個数を取得しています。
+
+
+#### 問35: 引数を素因数分解する`primeFactors`関数を実装せよ。
+
+結果は昇順にソートすること。
+
+```js
+const primeFactors = n => ((f = ((a, b = 2) =>
+  (a < b ** 2) ? [a] 
+  : (a % b === 0) ? [b].concat(f(a / b, b))
+  : f(a, b + 1)
+)) => f(n))()
+
+primeFactors(315) // [3, 3, 5, 7]
+```
+
+与えられた自然数`n`を`2`から順に割っていき、割り切れなくなるまで計算します。  
+
+処理している値`a`と、割るのに用いる現在値`b`を引数にとる`f`を定義します。  
+`a`は`sqrt(a)`より大きい数では割り切れないため、その場合は`a`を配列に詰めて返します。  
+`a`が`b`で割り切れるなら、`b`と`f(a / b, b)`を結合します。  
+それ以外の場合は、割るのに用いる数値を1進めて再帰します。  
+`4`や`10`なども`b`に入りますが、事前にその自然数までの素数で割っている場合は割り切れないため、素数しか結果の配列には入りません。
+
+#### 問36: 問35の結果を累乗で表現する`primeFactorsMult`関数を実装せよ。
+
+`3 ** 2`なら`[3, 2]`と表現します。
+
+```js
+const primeFactorsMult = n => ((factors = primeFactors(n)) => 
+  factors.filter((e, i, self) => self.indexOf(e) === i)
+    .map(e => [e, factors.filter(v => e === v).length])
+)()
+
+primeFactorsMult(315) // [[3, 2], [5, 1], [7, 1]]
+```
+
+先ほど定義した`primeFactors`関数を利用します。  
+
+まず、重複なしの配列を`filter((e, i, self) => self.indexOf(e) === i)`で作ります。  
+これは、要素の位置と要素の検索位置が一致していない要素（重複要素）があれば排除する処理になっています。  
+その後、`map(e => [e, factors.filter(v => e === v).length])`で要素と個数をペアにした配列を作成します。  
+これで、`primeFactors`の結果を`[[底, 指数], ...]`の形に変換することができます。
+
+#### 問37: オイラーのφ関数を改良した`phi`関数を実装せよ。
+
+問36の結果を`[[p1, m1], [p2, m2], [p3, m3], ...]`としたとき、オイラーのφ関数は次のようにして計算できます。
+
+```
+phi(m) = (p1 - 1) * p1 ** (m1 - 1) * 
+         (p2 - 1) * p2 ** (m2 - 1) * 
+         (p3 - 1) * p3 ** (m3 - 1) * ...
+```
+
+```js
+const phi = n => primeFactorsMult(n).map(([p, m]) => (p - 1) * p ** (m - 1)).reduce((a, c) => a * c)
+phi(10) // 4
+```
+
+先ほど定義した`primeFactorsMult`関数を利用します。  
+`map`で数式の形に合わせて`reduce`で掛け合わせるだけで計算できます。
+
+#### 問38: 問34と問37の実行時間を比較せよ。
+
+`totient(10090)`と`phi(10090)`を実行して、`phi`関数のほうが効率的であることを確かめてください。  
+せっかくなので、関数の実行時間を計測する`time`関数を実装して調べましょう。
+
+```js
+const time = (f, ...args) => {
+  const perf = typeof(performance) === 'undefined' ? require('perf_hooks').performance : performance
+
+  const t0 = perf.now()
+  f(...args)
+  const t1 = perf.now()
+  
+  return t1 - t0
+}
+
+time(totient, 10090) < time(phi, 10090) // true
+```
+
+パフォーマンスを計測するには`performance.now`を使用します。  
+Node.jsで実行する際はグローバルに定義されていないので、`perf_hooks`から`require`もしくは`import`しましょう。
+
+#### 問39: 与えられた範囲内の素数の配列を返す`primesR`関数を実装せよ。
+
+```js
+const primesR = (min, max) => [...Array(max - min + 1)].map((_, i) => i + min).filter(e => isPrime(e))
+primesR(10, 20) // [11, 13, 17, 19]
+```
+
+`isPrime`関数を利用します。  
+下限と上限を含めた整数の配列は`[...Array(max - min + 1)].map((_, i) => i + min)`で作成できるので、これを`isPrime`でフィルタしましょう。
+
+#### 問40: ゴールドバッハの予想を確かめる`goldbach`関数を実装せよ。
+
+ゴールドバッハの予想は「全ての2よりも大きな偶数は2つの素数の和として表すことができる」という予想です。
+
+```js
+const goldbach = n => {
+  if (n < 4 || n % 2 === 1) return []
+  if (n === 4) return [2, 2]
+
+  return [...Array(Math.floor(n / 2))]
+    .map((_, i) => i + 1)
+    .filter(e => e % 2 === 1)
+    .map(e => [e, n - e])
+    .find(([x, y]) => isPrime(x) && isPrime(y))
+}
+
+goldbach(28) // [5, 23]
+```
+
+`4`未満や奇数が渡された場合は空配列を返すことにします。  
+`4`の場合は、`[2, 2]`を返すようにします。
+
+引数を`2`で割った結果までの奇数の配列を作成します。  
+次に、`map`でその奇数との和で`n`になるような整数のペアに変換します。  
+最後に、両方とも素数の組を`find`の中で`isPrime`を使って見つけます。
+
+#### 問41: 与えられた範囲内の`goldbach`の結果を出力する`goldbachList`関数を実装せよ。
+
+第三引数を与えた場合、2つの素数がその値より大きいもののみを出力するようにしてください。
+
+```js
+const goldbachList = (min, max, gt) => {
+  const result = [...Array(max - min + 1)]
+    .map((_, i) => i + min)
+    .filter(e => e % 2 === 0)
+    .map(e => goldbach(e))
+
+  return gt ? result.filter(([x, y]) => x > gt && y > gt) : result
+}
+
+goldbachList(9, 20) // [[3, 7], [5, 7], [3, 11], [3, 13], [5, 13], [3,17]]
+goldbachList(4, 2000, 50) // [[73, 919], [61, 1321], [67, 1789], [61, 1867]]
+```
+
+偶数の配列を作成し、`map`で`goldbach`関数を適用するだけです。  
+第三引数が与えられている場合は、ペアがその値より大きいかどうかでフィルタします。
+
 
 
 #### 問66: 次の図のように、各ノードに座標を付与する`compactLayout`関数を実装せよ。
