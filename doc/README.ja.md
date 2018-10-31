@@ -603,6 +603,8 @@ goldbachList(4, 2000, 50) // [[73, 919], [61, 1321], [67, 1789], [61, 1867]]
 
 #### 問46: 真理値表を作成する`table`関数を実装せよ。
 
+`table((a, b, c) => a && (b || c))`のように、引数が増えても真理値表を出力できるようにしてください。
+
 ```js
 table((a, b) => a && (a || b))
 /*
@@ -615,21 +617,20 @@ table((a, b) => a && (a || b))
 */
 ```
 
-`table((a, b, c) => a && (b || c))`のように、引数が増えても真理値表を出力できるようにしてください。
-
-#### 問49: 与えられたbit数のグレイコードの配列を求める`gray`関数を実装せよ。
+#### 問49: 与えられたbit数の[グレイコード](https://ja.wikipedia.org/wiki/%E3%82%B0%E3%83%AC%E3%82%A4%E3%82%B3%E3%83%BC%E3%83%89)の配列を求める`gray`関数を実装せよ。
 
 ```js
 gray(3) // ["000","001","011","010","110","111","101","100"]
 ```
 
-#### 問50: ハフマン符号化をする`huffman`関数を実装せよ。
+#### 問50: [ハフマン符号化](https://ja.wikipedia.org/wiki/%E3%83%8F%E3%83%95%E3%83%9E%E3%83%B3%E7%AC%A6%E5%8F%B7)をする`huffman`関数を実装せよ。
 
-符号化する要素は`[記号, 出現頻度]`で表されます。
+符号化する要素は`[記号, 出現頻度]`で表されます。ついでに、文字列も変換できるようにしましょう。
 
 ```js
 huffman([['a', 45], ['b', 13], ['c', 12], ['d', 16], ['e', 9], ['f', 5]])
 // [['a', '0'], ['b', '101'], ['c', '100'], ['d', '111'], ['e', '1101'], ['f', '1100']]
+huffman('DAEBCBACBBBC') // [['A', '111'], ['B', '0'], ['C', '10'], ['D', '1100'], ['E', '1101'] ]
 ```
 
 ### 問54～60: 二分木
@@ -643,7 +644,7 @@ huffman([['a', 45], ['b', 13], ['c', 12], ['d', 16], ['e', 9], ['f', 5]])
 
 ```js
 const tree = new BinaryTree(['a', ['b', 'd', 'e'], ['c', null, ['f', 'g', null]]])
-console.log(tree)
+console.log(tree.toString())
 /*
 {
   "value": "a",
@@ -667,13 +668,41 @@ console.log(tree)
 
 #### 問55: 左部分木と右部分木のノードの数の差が1以下である二分木を全て生成する`cbalTree`関数を実装せよ。
 
-```js
+下記の省略されている`[BinaryTree]`の部分は、`BinaryTree { value: 'x', left: null, right: null }`のようになっています。
 
+```js
+BinaryTree.cbalTree(4)
+/*
+[ BinaryTree {
+    value: 'x',
+    left: BinaryTree { value: 'x', left: null, right: null },
+    right: BinaryTree { value: 'x', left: null, right: [BinaryTree] } },
+  BinaryTree {
+    value: 'x',
+    left: BinaryTree { value: 'x', left: null, right: [BinaryTree] },
+    right: BinaryTree { value: 'x', left: null, right: null } },
+  BinaryTree {
+    value: 'x',
+    left: BinaryTree { value: 'x', left: null, right: null },
+    right: BinaryTree { value: 'x', left: [BinaryTree], right: null } },
+  BinaryTree {
+    value: 'x',
+    left: BinaryTree { value: 'x', left: [BinaryTree], right: null },
+    right: BinaryTree { value: 'x', left: null, right: null } } ]
+*/
 ```
 
 #### 問56: 二分木が対称かどうかを返す`isSymmetric`関数を実装せよ。
 
 ノードの値は比較しません。あくまで、構造が対称かどうかを調べます。
+
+```js
+const x = new BinaryTree(['x', 'x', null])
+const y = new BinaryTree(['x', 'x', 'x'])
+
+x.isSymmetric // false
+y.isSymmetric // true
+```
 
 #### 問57: 二分探索木を生成する`searchTree`関数を実装せよ。
 
@@ -1596,6 +1625,271 @@ goldbachList(4, 2000, 50) // [[73, 919], [61, 1321], [67, 1789], [61, 1867]]
 
 偶数の配列を作成し、`map`で`goldbach`関数を適用するだけです。  
 第三引数が与えられている場合は、ペアがその値より大きいかどうかでフィルタします。
+
+
+### 問46～50: 論理と符号
+
+#### 問46: 真理値表を作成する`table`関数を実装せよ。
+
+`table((a, b, c) => a && (b || c))`のように、引数が増えても真理値表を出力できるようにしてください。
+
+```js
+const truth = n => {
+  if (n < 1) return []
+  if (n === 1) return [[true], [false]]
+  
+  const result = []
+  
+  truth(n - 1).forEach(e => {
+    result.push(e.concat(true))
+    result.push(e.concat(false))
+  })
+  return result
+}
+
+const table = f => truth(f.length).map(e => [e, f(...e)])
+
+table((a, b) => a && (a || b))
+/*
+[
+  [[true, true], true],
+  [[true, false], true],
+  [[false, true], false],
+  [[false, false], false]
+]
+*/
+```
+
+`truth`関数を定義して、真理値表で使う真理値の組み合わせを生成するようにします。  
+これは再帰で解けば、全てのパターンを簡単に生成できます。  
+`table`関数では、渡された関数の引数の長さを`Function.length`で取得して、`truth`関数に渡しています。  
+後は`map`内で渡された関数を呼び出してその結果を配列に格納します。
+
+#### 問49: 与えられたbit数の[グレイコード](https://ja.wikipedia.org/wiki/%E3%82%B0%E3%83%AC%E3%82%A4%E3%82%B3%E3%83%BC%E3%83%89)の配列を求める`gray`関数を実装せよ。
+
+```js
+const gray = n => [...Array(2 ** n)].map((_, i) => Number(i ^ (i >> 1)).toString(2).padStart(n, '0'))
+gray(3) // ["000","001","011","010","110","111","101","100"]
+```
+
+グレイコードは、対象の二進表現と、それを1bit右シフトしたものの`XOR`をとれば生成できます。  
+数値を二進表現の文字列として出力するのは、`Number.toString`に基数を渡せば変換することができます。  
+その際、頭の`0`は揃わないので、`padStart`を用いて長さを合わせます。
+
+#### 問50: [ハフマン符号化](https://ja.wikipedia.org/wiki/%E3%83%8F%E3%83%95%E3%83%9E%E3%83%B3%E7%AC%A6%E5%8F%B7)をする`huffman`関数を実装せよ。
+
+符号化する要素は`[記号, 出現頻度]`で表されます。ついでに、文字列も変換できるようにしましょう。
+
+```js
+const huffman = raws => {
+  if (typeof(raws) === 'string') {
+    const characters = [...raws]
+    raws = characters.filter((e, i, self) => self.indexOf(e) === i).map(e => [e, characters.filter(v => e === v).length])
+  }
+  if (raws.length < 2) throw new Error('この配列はハフマン符号化できません')
+
+  const sort = list => list.sort(([, a], [, b]) => a - b)
+
+  while (raws.length >= 2) {
+    raws = sort(raws)
+    const [xValues, xFreq] = raws.shift()
+    const [yValues, yFreq] = raws.shift()
+    raws.unshift([[xValues, yValues], xFreq + yFreq])
+  } 
+
+  const result = []
+
+  const encode = ([left, right], prefix = '') => {
+    if (Array.isArray(left)) { encode(left, `${prefix}0`) } else { result.push([left, `${prefix}0`]) }
+    if (Array.isArray(right)) { encode(right, `${prefix}1`) } else { result.push([right, `${prefix}1`]) }
+  }
+  encode(raws[0][0])
+
+  return result.sort(([a,], [b,]) => a.codePointAt() - b.codePointAt())
+}
+
+huffman([['a', 45], ['b', 13], ['c', 12], ['d', 16], ['e', 9], ['f', 5]])
+// [['a', '0'], ['b', '101'], ['c', '100'], ['d', '111'], ['e', '1101'], ['f', '1100']]
+huffman('DAEBCBACBBBC') // [['A', '111'], ['B', '0'], ['C', '10'], ['D', '1100'], ['E', '1101'] ]
+```
+
+引数に文字列が与えられた場合は、重複を排除にしてから`map`で出現頻度とペアにします。  
+配列として渡すときと同じ表現になれば問題ありません。
+
+ハフマン符号化するには、ハフマンツリーと呼ばれる二分木を構築する必要があります。  
+ハフマンツリーは次のようにして生成します（Wikipediaより引用）。
+
+> 1. まず、葉を含むすべての節点のうち、親を持たないものを集める。  
+> 2. その中から、最小の値を持つものと2番目に小さい値を持つものを取り出す。
+> 3. それらを子供に持つ新しい節点を作る。このとき、新しい節点の値は、両方の子供の値の和とする。
+
+つまり、今回の場合、次のように言い換えられます。
+
+1. 頻度で昇順ソートする
+1. 先頭から要素を2つ取り出し、0番目の要素を左、1番目の要素を右とする
+1. 先頭に`[[左, 右], 頻度の和]`を格納する
+1. 1～3を配列の長さが1になるまで繰り返す
+
+これで、結果の配列の先頭にはハフマンツリーが格納されることになります。  
+
+次に、ハフマンツリーを用いてハフマン符号化します。  
+左なら`0`、右なら`1`を文字列の後ろに付け加えていくことにします。  
+子が配列の場合は、再帰で子の左右を見て、葉に突き当たるまで処理を繰り返しましょう。  
+子が葉の場合は、結果の配列に`[子, 子をハフマン符号化したもの]`を格納します。
+
+ハフマン符号化の結果は実装や引数によって異なります。  
+復号するには、どの文字がどの符号に対応しているかの対応表（`huffman`関数の結果）が必要になります。
+
+
+### 問54～60: 二分木
+
+#### 問54: 二分木クラス`BinaryTree`を実装せよ。
+
+二分木は、あるノードが持つ子の数が2個以下の木構造です。  
+
+以下のようにコンストラクタに二分木にしたい配列を渡すと、二分木として表現できるようにします。  
+引数とする配列は、`[値, 左部分木, 右部分木]`で表現することにします。
+
+```js
+class BinaryTree {
+  
+  constructor(value = null, left = null, right = null) {
+    if (Array.isArray(value)) {
+      [value, left, right] = value
+    } 
+
+    this.value = value
+    this.left = Array.isArray(left) ? new BinaryTree(left) : left
+    this.right = Array.isArray(right) ? new BinaryTree(right) : right
+  }
+
+  toString() {
+    return JSON.stringify(this, null, 2)
+  }
+}
+
+const tree = new BinaryTree(['a', ['b', 'd', 'e'], ['c', null, ['f', 'g', null]]])
+console.log(tree.toString())
+/*
+{
+  "value": "a",
+  "left": {
+    "value": "b",
+    "left": "d",
+    "right": "e"
+  },
+  "right": {
+    "value": "c",
+    "left": null,
+    "right": {
+      "value": "f",
+      "left": "g",
+      "right": null
+    }
+  }
+}
+*/
+```
+
+二分木を表現した配列が渡されたら、コンストラクタの引数の`value`、`left`、`right`に分割代入します。  
+JavaScriptではコンストラクタを複数定義することができないので、擬似的に定義したい場合は引数の数や型などで条件を分岐する必要があります。  
+
+結果を見たいとき、今回の場合は`toString`でJSONにシリアライズできるようにしておくと木構造が把握しやすくなるかもしれません（ので、問題に追加しました）。
+
+#### 問55: 左部分木と右部分木のノードの数の差が1以下である二分木を全て生成する`cbalTree`関数を実装せよ。
+
+下記の省略されている`[BinaryTree]`の部分は、`BinaryTree { value: 'x', left: null, right: null }`のようになっています。
+
+```js
+BinaryTree.cbalTree = n => {
+  n = Math.floor(n)
+  if (n <= 0) return [null]
+  if (n === 1) return [new BinaryTree('x')]
+  
+  const result = []
+
+  if (n % 2 === 1) {
+    const trees = BinaryTree.cbalTree((n - 1) / 2)
+    trees.forEach(left => trees.forEach(right => result.push(new BinaryTree('x', left, right))))
+
+  } else {
+    const left = BinaryTree.cbalTree(n / 2 - 1)
+    const right = BinaryTree.cbalTree(n / 2)
+
+    left.forEach(l => right.forEach(r => result.push(...[new BinaryTree('x', l, r), new BinaryTree('x', r, l)])))
+  }
+
+  return result
+}
+
+BinaryTree.cbalTree(4)
+/*
+[ BinaryTree {
+    value: 'x',
+    left: BinaryTree { value: 'x', left: null, right: null },
+    right: BinaryTree { value: 'x', left: null, right: [BinaryTree] } },
+  BinaryTree {
+    value: 'x',
+    left: BinaryTree { value: 'x', left: null, right: [BinaryTree] },
+    right: BinaryTree { value: 'x', left: null, right: null } },
+  BinaryTree {
+    value: 'x',
+    left: BinaryTree { value: 'x', left: null, right: null },
+    right: BinaryTree { value: 'x', left: [BinaryTree], right: null } },
+  BinaryTree {
+    value: 'x',
+    left: BinaryTree { value: 'x', left: [BinaryTree], right: null },
+    right: BinaryTree { value: 'x', left: null, right: null } } ]
+*/
+```
+
+再帰させたいので、終了する条件から先に考えてしまいましょう。  
+`0`以下ならそもそも木構造が無いので`null`で、`1`なら`x`のノードがあるだけの木です。  
+左右の部分木のノード数の合計は根を取り除いた数なので`n - 1`になります。  
+
+`n`が奇数のとき、左部分木と右部分木のノードの数の差は`0`です。  
+なので`cbalTree((n - 1) / 2)`の結果を二重ループさせて、全ての二分木のパターンを生成します。
+
+`n`が偶数のとき、左部分木と右部分木のノードの数の差は`1`です。  
+`2`の場合を考えてみると、左右のどちらかが`null`になることが分かると思います。  
+つまり、左右の部分木が`cbalTree(n / 2 - 1)`と`cbalTree(n / 2)`の結果を組み合わせたパターンになります。
+
+#### 問56: 二分木が対称かどうかを返す`isSymmetric`関数を実装せよ。
+
+ノードの値は比較しません。あくまで、構造が対称かどうかを調べます。
+
+```js
+class BinaryTree {
+  /* 省略 */
+  get isSymmetric() {
+    const mirror = (x, y) => {
+      if (x === null && y === null) return true
+      if (typeof(x) !== 'object' && typeof(y) !== 'object') return true
+      
+      if (x !== null && y !== null && typeof(x) === 'object' && typeof(y) === 'object') {
+        return mirror(x.left, y.right) && mirror(x.right, y.left)
+      }
+      return false
+    }
+    return mirror(this, this)
+  }
+}
+
+const x = new BinaryTree(['x', 'x', null])
+const y = new BinaryTree(['x', 'x', 'x'])
+
+x.isSymmetric // false
+y.isSymmetric // true
+```
+
+`mirror`関数は二つの木を比較して対称かどうかを調べてくれる関数です。  
+左の要素と右の要素が`null`の場合は`true`にします。  
+また、葉同士を比較した場合は`true`とします。
+
+木構造が入っている場合は、左右の要素を`mirror`関数を再帰呼び出しすることで比較します。  
+条件分岐するとき、`typeof(null) === 'object'`なことには気をつけましょう。
+
+`mirror`関数の最初の呼び出しは、この二分木自身(`this`)を渡しましょう。
 
 
 
