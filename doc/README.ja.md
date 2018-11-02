@@ -650,15 +650,27 @@ console.log(tree.toString())
   "value": "a",
   "left": {
     "value": "b",
-    "left": "d",
-    "right": "e"
+    "left": {
+      "value": "d",
+      "left": null,
+      "right": null
+    },
+    "right": {
+      "value": "e",
+      "left": null,
+      "right": null
+    }
   },
   "right": {
     "value": "c",
     "left": null,
     "right": {
       "value": "f",
-      "left": "g",
+      "left": {
+        "value": "g",
+        "left": null,
+        "right": null
+      },
       "right": null
     }
   }
@@ -710,19 +722,80 @@ y.isSymmetric // true
 
 ```js
 BinaryTree.searchTree([3, 2, 5, 7, 1])
-// TODO 結果
-BinaryTree.searchTree([5, 3, 18, 1, 4, 12, 21]).isSymmetric() // true
-BinaryTree.searchTree([3, 2, 5, 7, 4]).isSymmetric() // false
+/*
+BinaryTree {
+  value: 3,
+  left:
+   BinaryTree {
+     value: 2,
+     left: BinaryTree { value: 1, left: null, right: null },
+     right: null },
+  right:
+   BinaryTree {
+     value: 5,
+     left: null,
+     right: BinaryTree { value: 7, left: null, right: null } } }
+*/
+BinaryTree.searchTree([5, 3, 18, 1, 4, 12, 21]).isSymmetric // true
+BinaryTree.searchTree([3, 2, 5, 7, 4]).isSymmetric // false
 ```
 
 #### 問58: 問55のように平衡で、かつ対称な二分木があれば返す`symCbalTrees`関数を実装せよ。
 
 引数はノード数で、そのような二分木が見つからなければ`[]`を返します。  
 
+```js
+BinaryTree.symCbalTrees(5)
+/*
+[ BinaryTree {
+    value: 'x',
+    left: BinaryTree { value: 'x', left: null, right: [BinaryTree] },
+    right: BinaryTree { value: 'x', left: [BinaryTree], right: null } },
+  BinaryTree {
+    value: 'x',
+    left: BinaryTree { value: 'x', left: [BinaryTree], right: null },
+    right: BinaryTree { value: 'x', left: null, right: [BinaryTree] } } ]
+*/
+```
+
 #### 問59: 左部分木と右部分木の高さの差が1以下である二分木を全て生成する`hbalTree`関数を実装せよ。
 
+引数は生成する木構造の高さ（根ノードの高さ）とします。
+
+```js
+BinaryTree.hbalTree(3)[0]
+/*
+BinaryTree {
+  value: 'x',
+  left: BinaryTree { value: 'x', left: null, right: null },
+  right:
+   BinaryTree {
+     value: 'x',
+     left: null,
+     right: BinaryTree { value: 'x', left: null, right: null } } }
+*/
+BinaryTree.hbalTree(4).length // 315
+```
 
 #### 問60: 与えられた数のノードを持つ問59のような二分木を全て生成する`hbalTreeNodes`関数を実装せよ。
+
+**ヒント**  
+まず、左部分木と右部分木の高さの差が1以下である二分木の高さ`h`を実現するために必要な最小ノード数を計算する`minNodes`関数を定義します。  
+少し数式を考えてみれば、最小ノード数はフィボナッチ数列に近いものになるはずです。  
+次に、`minNodes`関数を用いて、問題の木構造の最大の高さを求める`maxHeight`関数を定義します。  
+その後、最小から最大までの高さについて、与えられたノード数を持つ二分木があるかどうか調べます。
+
+```js
+BinaryTree.hbalTreeNodes(15).length // 1553
+[0, 1, 2, 3].map(BinaryTree.hbalTreeNodes)
+/*
+[ [ null ],
+  [ BinaryTree { value: 'x', left: null, right: null } ],
+  [ BinaryTree { value: 'x', left: null, right: [BinaryTree] },
+    BinaryTree { value: 'x', left: [BinaryTree], right: null } ],
+  [ BinaryTree { value: 'x', left: [BinaryTree], right: [BinaryTree] } ] ]
+*/
+```
 
 
 ### 問61～69: 二分木、続き
@@ -1753,20 +1826,20 @@ huffman('DAEBCBACBBBC') // [['A', '111'], ['B', '0'], ['C', '10'], ['D', '1100']
 ```js
 class BinaryTree {
   
-  constructor(value = null, left = null, right = null) {
-    if (Array.isArray(value)) {
-      [value, left, right] = value
-    } 
+  constructor(value, left = null, right = null) {
+    if (Array.isArray(value)) { [value, left, right] = value } 
+    else if (BinaryTree.isBinaryTree(value)) { ({value, left, right} = value) }
 
     this.value = value
-    this.left = Array.isArray(left) ? new BinaryTree(left) : left
-    this.right = Array.isArray(right) ? new BinaryTree(right) : right
+    this.left = left !== null ? new BinaryTree(left) : left
+    this.right = right !== null ? new BinaryTree(right) : right
   }
 
   toString() {
     return JSON.stringify(this, null, 2)
   }
 }
+BinaryTree.isBinaryTree = v => v !== null && typeof(v) === 'object' && v.hasOwnProperty('value') && v.hasOwnProperty('left') && v.hasOwnProperty('right')
 
 const tree = new BinaryTree(['a', ['b', 'd', 'e'], ['c', null, ['f', 'g', null]]])
 console.log(tree.toString())
@@ -1775,15 +1848,27 @@ console.log(tree.toString())
   "value": "a",
   "left": {
     "value": "b",
-    "left": "d",
-    "right": "e"
+    "left": {
+      "value": "d",
+      "left": null,
+      "right": null
+    },
+    "right": {
+      "value": "e",
+      "left": null,
+      "right": null
+    }
   },
   "right": {
     "value": "c",
     "left": null,
     "right": {
       "value": "f",
-      "left": "g",
+      "left": {
+        "value": "g",
+        "left": null,
+        "right": null
+      },
       "right": null
     }
   }
@@ -1792,6 +1877,7 @@ console.log(tree.toString())
 ```
 
 二分木を表現した配列が渡されたら、コンストラクタの引数の`value`、`left`、`right`に分割代入します。  
+また、`value`に二分木が渡されたときは、その二分木のコピーを作成できるようにしておきます。  
 JavaScriptではコンストラクタを複数定義することができないので、擬似的に定義したい場合は引数の数や型などで条件を分岐する必要があります。  
 
 結果を見たいとき、今回の場合は`toString`でJSONにシリアライズできるようにしておくと木構造が把握しやすくなるかもしれません（ので、問題に追加しました）。
@@ -1864,11 +1950,7 @@ class BinaryTree {
   get isSymmetric() {
     const mirror = (x, y) => {
       if (x === null && y === null) return true
-      if (typeof(x) !== 'object' && typeof(y) !== 'object') return true
-      
-      if (x !== null && y !== null && typeof(x) === 'object' && typeof(y) === 'object') {
-        return mirror(x.left, y.right) && mirror(x.right, y.left)
-      }
+      if (x !== null && y !== null) return mirror(x.left, y.right) && mirror(x.right, y.left)
       return false
     }
     return mirror(this, this)
@@ -1884,13 +1966,192 @@ y.isSymmetric // true
 
 `mirror`関数は二つの木を比較して対称かどうかを調べてくれる関数です。  
 左の要素と右の要素が`null`の場合は`true`にします。  
-また、葉同士を比較した場合は`true`とします。
-
 木構造が入っている場合は、左右の要素を`mirror`関数を再帰呼び出しすることで比較します。  
-条件分岐するとき、`typeof(null) === 'object'`なことには気をつけましょう。
 
 `mirror`関数の最初の呼び出しは、この二分木自身(`this`)を渡しましょう。
 
+#### 問57: 二分探索木を生成する`searchTree`関数を実装せよ。
+
+引数は一次元配列とします。
+
+```js
+BinaryTree.searchTree = numbers => {
+  if (numbers.length === 0) return null
+  const [x, ...xs] = numbers
+
+  const tree = new BinaryTree(x)
+  let target = tree
+
+  const insert = n => {
+    const property = n < target.value ? 'left' : 'right'
+
+    if (target[property] !== null) {
+      target = target[property]
+      insert(n)
+    } else {
+      target[property] = new BinaryTree(n)
+      target = tree
+    }
+  }
+  xs.forEach(insert)
+  
+  return tree
+}
+
+BinaryTree.searchTree([3, 2, 5, 7, 1])
+/*
+BinaryTree {
+  value: 3,
+  left:
+   BinaryTree {
+     value: 2,
+     left: BinaryTree { value: 1, left: null, right: null },
+     right: null },
+  right:
+   BinaryTree {
+     value: 5,
+     left: null,
+     right: BinaryTree { value: 7, left: null, right: null } } }
+*/
+BinaryTree.searchTree([5, 3, 18, 1, 4, 12, 21]).isSymmetric // true
+BinaryTree.searchTree([3, 2, 5, 7, 4]).isSymmetric // false
+```
+
+二分探索木では、挿入しようとしている値が着目しているノードの値より小さければ左に、それ以上なら右に挿入を試みます。  
+挿入先にもノードがあるなら同様の操作を繰り返していき、何もなければ（`null`の場合）挿入します。  
+解答例では、`insert`関数を再帰呼び出しすることで、挿入位置を決定して挿入しています。
+
+JavaScriptのオブジェクトは連想配列のようになっているので、添字にプロパティ名を渡せば参照できます。  
+今回のように左や右を見るだけであれば便利かもしれません。  
+
+#### 問58: 問55のように平衡で、かつ対称な二分木があれば返す`symCbalTrees`関数を実装せよ。
+
+引数はノード数で、そのような二分木が見つからなければ`[]`を返します。  
+
+```js
+BinaryTree.symCbalTrees = n => BinaryTree.cbalTree(n).filter(e => e.isSymmetric)
+
+BinaryTree.symCbalTrees(5)
+/*
+[ BinaryTree {
+    value: 'x',
+    left: BinaryTree { value: 'x', left: null, right: [BinaryTree] },
+    right: BinaryTree { value: 'x', left: [BinaryTree], right: null } },
+  BinaryTree {
+    value: 'x',
+    left: BinaryTree { value: 'x', left: [BinaryTree], right: null },
+    right: BinaryTree { value: 'x', left: null, right: [BinaryTree] } } ]
+*/
+```
+
+`cbalTree`の結果を`isSymmetric`でフィルタするだけです。  
+既に単体テスト済みなら、今まで作った関数を組み合わせるのが安全でしょう。
+
+#### 問59: 左部分木と右部分木の高さの差が1以下である二分木を全て生成する`hbalTree`関数を実装せよ。
+
+引数は生成する木構造の高さ（根ノードの高さ）とします。
+
+```js
+BinaryTree.hbalTree = maxHeight => {
+  if (maxHeight <= 0) return [null]
+  if (maxHeight === 1) return [new BinaryTree('x')]
+
+  const highers = BinaryTree.hbalTree(maxHeight - 1)
+  const lowers = BinaryTree.hbalTree(maxHeight - 2)
+
+  const result = []
+  lowers.forEach(lower => highers.forEach(higher => result.push(new BinaryTree('x', lower, higher))))
+  highers.forEach(x => highers.forEach(y => result.push(new BinaryTree('x', x, y))))
+  highers.forEach(higher => lowers.forEach(lower => result.push(new BinaryTree('x', higher, lower))))
+
+  return result
+}
+
+BinaryTree.hbalTree(3)[0]
+/*
+BinaryTree {
+  value: 'x',
+  left: BinaryTree { value: 'x', left: null, right: null },
+  right:
+   BinaryTree {
+     value: 'x',
+     left: null,
+     right: BinaryTree { value: 'x', left: null, right: null } } }
+*/
+BinaryTree.hbalTree(4).length // 315
+```
+
+このような二分木を[AVL木](https://ja.wikipedia.org/wiki/AVL%E6%9C%A8)といいます。  
+AVL木はどの左部分木と右部分木を見ても高さの差が1以下です。つまり、
+
+- 左部分木が低くて右部分木が高い二分木
+- 左部分木と右部分木の高さが同じ二分木
+- 左部分木が高くて右部分木が低い二分木
+
+をそれぞれ生成して格納すればいいことになります。
+
+#### 問60: 与えられた数のノードを持つ問59のような二分木を全て生成する`hbalTreeNodes`関数を実装せよ。
+
+**ヒント**  
+まず、左部分木と右部分木の高さの差が1以下である二分木の高さ`h`を実現するために必要な最小ノード数を計算する`minNodes`関数を定義します。  
+少し数式を考えてみれば、最小ノード数はフィボナッチ数列に近いものになるはずです。  
+次に、`minNodes`関数を用いて、問題の木構造の最大の高さを求める`maxHeight`関数を定義します。  
+その後、最小から最大までの高さについて、与えられたノード数を持つ二分木があるかどうか調べます。
+
+```js
+class BinaryTree {
+  /* 省略 */
+  get countNodes() {
+    const count = tree => tree === null ? 0 : count(tree.left) + count(tree.right) + 1
+    return count(this)
+  }
+}
+
+const hbalTreeMaxHeight = (n, prev = 0, ac = 1, height = 1) => {
+  if (n < 1) return 0
+  const value = prev + ac + 1
+  return n < value ? height : hbalTreeMaxHeight(n, ac, value, height + 1)
+}
+
+BinaryTree.hbalTreeNodes = n => {
+  if (n <= 0) return [null]
+
+  const minHeight = Math.ceil(Math.log2(n + 1))
+  const maxHeight = hbalTreeMaxHeight(n)
+  const result = []
+
+  for (let i = minHeight; i <= maxHeight; i++) {
+    const trees = BinaryTree.hbalTree(i).filter(e => e.countNodes === n)
+    result.push(...trees)
+  }
+  return result
+}
+
+BinaryTree.hbalTreeNodes(15).length // 1553
+[0, 1, 2, 3].map(BinaryTree.hbalTreeNodes)
+/*
+[ [ null ],
+  [ BinaryTree { value: 'x', left: null, right: null } ],
+  [ BinaryTree { value: 'x', left: null, right: [BinaryTree] },
+    BinaryTree { value: 'x', left: [BinaryTree], right: null } ],
+  [ BinaryTree { value: 'x', left: [BinaryTree], right: [BinaryTree] } ] ]
+*/
+```
+
+先に、`BinaryTree`クラスに合計ノード数を計算する`countNodes`を定義しておきます。  
+
+高さ`h`のAVL木の最小ノード数を求める関数`a(h)`について考えましょう。  
+高さ`1`のときは最小ノード数は`1`です。高さ`2`のときは`2`で、高さ`3`のときは`4`ですね。  
+また、高さ`h`を実現するためにノード数を最小にする場合、左部分木と右部分木の高さが異なります。  
+つまり、一方の部分木の最小ノード数は`a(h - 1)`で、もう一方の部分木の最小ノード数は`a(h - 2)`となります。  
+根も含めるので、`a(h) = a(h - 1) + a(h - 2) + 1`となります。
+（`n`番目のフィボナッチ数は`a(n) = a(n - 1) + a(n - 2)`なので、この漸化式にかなり似ていますね）
+
+求めた`a(h)`により、高さ`h`のAVL木の最小ノード数は`[1, 2, 4, 7, 12, 20, 33, 54, 88, 143, ...]`のようになることが分かりました。  
+この配列の`index + 1`が最大の高さと一致しているため、ノード数と数列を比較しながら最大の高さを求める`hbalTreeMaxHeight`関数を定義します。  
+また、最小の高さはノードを順に詰めていくため、`Math.ceil(Math.log2(n + 1))`になります。
+
+あとは最小から最大の高さまで`hbalTree`でAVL木を全て生成して`countNodes`でフィルタします。
 
 
 #### 問66: 次の図のように、各ノードに座標を付与する`compactLayout`関数を実装せよ。
