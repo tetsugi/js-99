@@ -802,18 +802,47 @@ BinaryTree.hbalTreeNodes(15).length // 1553
 
 #### 問61: 二分木の葉の数を数える`countLeaves`関数を実装せよ。
 
+```js
+(new BinaryTree([1, [2, null, 4], 2])).countLeaves // 2
+```
+
 #### 問61A: 二分木の葉のリストを返す`leaves`関数を実装せよ。
+
+```js
+(new BinaryTree([1, [2, null, 4], 2])).leaves // [ 4, 2 ]
+```
 
 #### 問62: 二分木の内部ノード（葉以外の節）を返す`internals`関数を実装せよ。
 
+```js
+(new BinaryTree([1, [2, null, 4], 2])).internals // [ 1, 2 ]
+```
+
 #### 問62B: 指定された深さのノードのリストを返す`atLevel`関数を実装せよ。
+
+```js
+(new BinaryTree([1, [2, null, 4], 2])).atLevel(2) // [ 2, 2 ]
+```
 
 #### 問63: 完全二分木を生成する`completeBinaryTree`関数と、完全二分木かどうかを返す`isCompleteBinaryTree`関数を実装せよ。
 
-完全二分木は、根からすべての葉までの深さの差が1以下で、葉が左詰めになっている二分木です。
+完全二分木は、根からすべての葉までの深さの差が1以下で、葉が左詰めになっている二分木です。  
+引数はノード数とします。
 
 ```js
-
+BinaryTree.completeBinaryTree(4)
+/*
+BinaryTree {
+  value: 'x',
+  left:
+   BinaryTree {
+     value: 'x',
+     left: BinaryTree { value: 'x', left: null, right: null },
+     right: null },
+  right: BinaryTree { value: 'x', left: null, right: null } }
+*/
+(new BinaryTree(['x', ['x', 'x', null], ['x', null, null]])).isCompleteBinaryTree // true
+(new BinaryTree(['x', ['x', 'x', null], ['x', null, 'x']])).isCompleteBinaryTree // false
 ```
 
 #### 問64: 次の図のように、各ノードに座標を付与する`layout`関数を実装せよ。
@@ -825,12 +854,53 @@ BinaryTree.hbalTreeNodes(15).length // 1553
 - x座標は、通りがけ順に走査したときの順番
 - y座標は、そのノードがある深さ
 
+結果が見づらくなるので、各ノードの座標を分かりやすく取得できる`positions`関数もついでに定義しましょう。
+
+```js
+const result = (new BinaryTree(['n', ['k', ['c', 'a', ['h', ['g', 'e', null], null]], 'm'], ['u', ['p', null, ['s', 'q', null]], null]])).layout()
+result.positions
+/*
+[ { value: 'n', x: 8, y: 1 },
+  { value: 'k', x: 6, y: 2 },
+  { value: 'c', x: 2, y: 3 },
+  { value: 'a', x: 1, y: 4 },
+  { value: 'h', x: 5, y: 4 },
+  { value: 'g', x: 4, y: 5 },
+  { value: 'e', x: 3, y: 6 },
+  { value: 'm', x: 7, y: 3 },
+  { value: 'u', x: 12, y: 2 },
+  { value: 'p', x: 9, y: 3 },
+  { value: 's', x: 11, y: 4 },
+  { value: 'q', x: 10, y: 5 } ]
+*/
+```
+
 #### 問65: 次の図のように、各ノードに座標を付与する`wideLayout`関数を実装せよ。
 
 ![問65](./img/p65.gif)
 
 配置ルールは図を見て考えてください。  
-ヒント：ある深さの隣接するノードの水平距離が一定なことに着目しましょう。
+
+**ヒント**  
+ある深さの隣接するノードの水平距離が一定なことに着目しましょう。
+
+```js
+const result = (new BinaryTree(['n', ['k', ['c', 'a', ['e', 'd', 'g']], 'm'], ['u', ['p', null, 'q'], null]])).wideLayout()
+result.positions
+/*
+[ { value: 'n', x: 15, y: 1 },
+  { value: 'k', x: 7, y: 2 },
+  { value: 'c', x: 3, y: 3 },
+  { value: 'a', x: 1, y: 4 },
+  { value: 'e', x: 5, y: 4 },
+  { value: 'd', x: 4, y: 5 },
+  { value: 'g', x: 6, y: 5 },
+  { value: 'm', x: 11, y: 3 },
+  { value: 'u', x: 23, y: 2 },
+  { value: 'p', x: 19, y: 3 },
+  { value: 'q', x: 21, y: 4 } ]
+*/
+```
 
 #### 問66: 次の図のように、各ノードに座標を付与する`compactLayout`関数を実装せよ。
 
@@ -839,11 +909,25 @@ BinaryTree.hbalTreeNodes(15).length // 1553
 このレイアウトを用いると、全てのノードにおいて一定の対称性を保ちつつ、コンパクトに二分木を表現できます。  
 配置ルールは図を見て考えてください。  
 
-ヒント：ノードと後継ノード間の水平距離に着目しましょう。  
-左部分木と右部分木をまとめて結合していけば、構築できるのではないでしょうか。
+**ヒント**  
+ノードと後継ノード間の水平距離に着目しましょう。
 
 ```js
-
+const result = (new BinaryTree(['n', ['k', ['c', 'a', ['e', 'd', 'g']], 'm'], ['u', ['p', null, 'q'], null]])).compactLayout()
+result.positions
+/*
+[ { value: 'n', x: 5, y: 1 },
+  { value: 'k', x: 3, y: 2 },
+  { value: 'c', x: 2, y: 3 },
+  { value: 'a', x: 1, y: 4 },
+  { value: 'e', x: 3, y: 4 },
+  { value: 'd', x: 2, y: 5 },
+  { value: 'g', x: 4, y: 5 },
+  { value: 'm', x: 4, y: 3 },
+  { value: 'u', x: 7, y: 2 },
+  { value: 'p', x: 6, y: 3 },
+  { value: 'q', x: 7, y: 4 } ]
+*/
 ```
 
 #### 問67: 文字列をパースして二分木にする`fromString`関数を実装せよ。
@@ -2154,9 +2238,329 @@ BinaryTree.hbalTreeNodes(15).length // 1553
 あとは最小から最大の高さまで`hbalTree`でAVL木を全て生成して`countNodes`でフィルタします。
 
 
+### 問61～69: 二分木、続き
+
+#### 問61: 二分木の葉の数を数える`countLeaves`関数を実装せよ。
+
+```js
+class BinaryTree {
+  /* 省略 */
+  get countLeaves() {
+    const count = tree => {
+      if (tree === null) return 0
+      const { left, right } = tree
+      return left === null && right === null ? 1 : count(left) + count(right)
+    }
+    return count(this)
+  }
+}
+
+(new BinaryTree([1, [2, null, 4], 2])).countLeaves // 2
+```
+
+葉以外のノードは無視するようにして、`count`関数を再帰させて数えます。
+
+#### 問61A: 二分木の葉のリストを返す`leaves`関数を実装せよ。
+
+```js
+class BinaryTree {
+  /* 省略 */
+  get leaves() {
+    const take = tree => {
+      if (tree === null) return []
+      const { value, left, right } = tree
+      return left === null && right === null ? [value] : [...take(left), ...take(right)]
+    }
+    return take(this)
+  }
+}
+
+(new BinaryTree([1, [2, null, 4], 2])).leaves // [ 4, 2 ]
+```
+
+`countLeaves`の結果を少し変えれば実装できます。  
+葉なら`value`のみ格納された配列を返し、それ以外なら再帰します。
+
+#### 問62: 二分木の内部ノード（葉以外の節）を返す`internals`関数を実装せよ。
+
+```js
+class BinaryTree {
+  /* 省略 */
+  get internals() {
+    const take = tree => {
+      if (tree === null) return []
+      const { value, left, right } = tree
+      return left === null && right === null ? [] : [value, ...take(left), ...take(right)]
+    }
+    return take(this)
+  }
+}
+
+(new BinaryTree([1, [2, null, 4], 2])).internals // [ 1, 2 ]
+```
+
+これも`leaves`を少し変えれば実装できます。  
+葉なら空配列を返すようにして、それ以外なら`value`（内部ノード）と、`left`と`right`の内部ノードの配列を結合したものを返します。
+
+#### 問62B: 指定された深さのノードのリストを返す`atLevel`関数を実装せよ。
+
+```js
+class BinaryTree {
+  /* 省略 */
+  atLevel(level) {
+    if (level === 1) return [this.value]
+
+    if (level > 1) {
+      const left = this.left === null ? [] : this.left.atLevel(level - 1)
+      const right = this.right === null ? [] : this.right.atLevel(level - 1)
+      return [...left, ...right]
+    }
+    return []
+  }
+}
+
+(new BinaryTree([1, [2, null, 4], 2])).atLevel(2) // [ 2, 2 ]
+```
+
+`level`が`1`なら、その深さのノードの値のみを返します。  
+`level`が`1`より大きい場合、左右の部分木が`null`でないなら、それぞれ`atLevel(level - 1)`を呼びます。  
+得られた配列を結合すると、結果的に同じ深さのノードを集めることができます。
+
+#### 問63: 完全二分木を生成する`completeBinaryTree`関数と、完全二分木かどうかを返す`isCompleteBinaryTree`関数を実装せよ。
+
+完全二分木は、根からすべての葉までの深さの差が1以下で、葉が左詰めになっている二分木です。  
+引数はノード数とします。
+
+```js
+class BinaryTree {
+  /* 省略 */
+  get isCompleteBinaryTree() {
+    const equals = (x, y) => {
+      if (x === null && y === null) return true
+      if (x !== null && y !== null) return equals(x.left, y.left) && equals(x.right, y.right)
+      return false
+    }
+    return equals(this, BinaryTree.completeBinaryTree(this.countNodes))
+  }
+}
+BinaryTree.completeBinaryTree = n => ((f = x => x > n ? null : new BinaryTree('x', f(x * 2), f(x * 2 + 1))) => f(1))()
+
+BinaryTree.completeBinaryTree(4)
+/*
+BinaryTree {
+  value: 'x',
+  left:
+   BinaryTree {
+     value: 'x',
+     left: BinaryTree { value: 'x', left: null, right: null },
+     right: null },
+  right: BinaryTree { value: 'x', left: null, right: null } }
+*/
+(new BinaryTree(['x', ['x', 'x', null], ['x', null, null]])).isCompleteBinaryTree // true
+(new BinaryTree(['x', ['x', 'x', null], ['x', null, 'x']])).isCompleteBinaryTree // false
+```
+
+完全二分木の幅優先探索について、任意の部分木の根ノードを`n`番目とするとき、子ノードは左が`2n`番目、右が`2n + 1`番目になります。  
+これを利用すると`completeBinaryTree`関数を定義できます。指定したノード数を超えてしまった場合は`null`を返します。
+
+二分木が完全二分木かどうかを調べるには、調べたい二分木のノード数から完全二分木を生成して、これらの構造が等しいかどうかを確かめましょう。
+
+#### 問64: 次の図のように、各ノードに座標を付与する`layout`関数を実装せよ。
+
+![問64](./img/p64.gif)
+
+次のようにノードに座標を割り振ります。
+
+- x座標は、通りがけ順に走査したときの順番
+- y座標は、そのノードがある深さ
+
+結果が見づらくなるので、各ノードの座標を分かりやすく取得できる`positions`関数もついでに定義しましょう。
+
+```js
+class BinaryTree {
+  /* 省略 */
+  get positions() {
+    const f = tree => {
+      if (tree === null) return []
+      const { value, x, y } = tree
+      return [{ value, x, y }, ...f(tree.left), ...f(tree.right)]
+    }
+    return f(this)
+  }
+
+  layout() {
+    const f = (x, y, tree) => {
+      if (tree === null) return x
+      
+      const lx = f(x, y + 1, tree.left)
+      tree.x = lx
+      tree.y = y
+
+      return f(lx + 1, y + 1, tree.right)
+    }
+
+    f(1, 1, this)
+    return this
+  }
+}
+
+const result = (new BinaryTree(['n', ['k', ['c', 'a', ['h', ['g', 'e', null], null]], 'm'], ['u', ['p', null, ['s', 'q', null]], null]])).layout()
+result.positions
+/*
+[ { value: 'n', x: 8, y: 1 },
+  { value: 'k', x: 6, y: 2 },
+  { value: 'c', x: 2, y: 3 },
+  { value: 'a', x: 1, y: 4 },
+  { value: 'h', x: 5, y: 4 },
+  { value: 'g', x: 4, y: 5 },
+  { value: 'e', x: 3, y: 6 },
+  { value: 'm', x: 7, y: 3 },
+  { value: 'u', x: 12, y: 2 },
+  { value: 'p', x: 9, y: 3 },
+  { value: 's', x: 11, y: 4 },
+  { value: 'q', x: 10, y: 5 } ]
+*/
+```
+
+`positions`は、各ノードの`value`と`x`と`y`プロパティを入れたオブジェクトをまとめた配列を返すようにします。  
+通りがけ順の走査では、一度左側の子を再帰で見てから、今見ているノードのx座標を決定します。  
+その後、右側の子のx座標を`決定されたx座標 + 1`として再帰呼び出しし、これを戻り値とします。
+
+#### 問65: 次の図のように、各ノードに座標を付与する`wideLayout`関数を実装せよ。
+
+![問65](./img/p65.gif)
+
+配置ルールは図を見て考えてください。  
+
+**ヒント**  
+ある深さの隣接するノードの水平距離が一定なことに着目しましょう。
+
+```js
+class BinaryTree {
+  /* 省略 */
+  get height() {
+    const f = tree => tree === null ? 0 : Math.max(f(tree.left), f(tree.right)) + 1
+    return f(this)
+  }
+
+  get leftHeight() {
+    const f = tree => tree === null ? 0 : f(tree.left) + 1
+    return f(this)
+  }
+
+  wideLayout() {
+    const f = (x, y, sep, tree) => {
+      if (tree === null) return
+
+      tree.x = x
+      tree.y = y
+      f(x - sep, y + 1, sep / 2, tree.left)
+      f(x + sep, y + 1, sep / 2, tree.right)
+    }
+
+    const h = this.height
+    const lh = this.leftHeight
+    const x = 2 ** (h - 1) - 2 ** (h - lh) + 1
+    const sep = 2 ** (h - 2)
+
+    f(x, 1, sep, this)
+    return this
+  }
+}
+
+const result = (new BinaryTree(['n', ['k', ['c', 'a', ['e', 'd', 'g']], 'm'], ['u', ['p', null, 'q'], null]])).wideLayout()
+result.positions
+/*
+[ { value: 'n', x: 15, y: 1 },
+  { value: 'k', x: 7, y: 2 },
+  { value: 'c', x: 3, y: 3 },
+  { value: 'a', x: 1, y: 4 },
+  { value: 'e', x: 5, y: 4 },
+  { value: 'd', x: 4, y: 5 },
+  { value: 'g', x: 6, y: 5 },
+  { value: 'm', x: 11, y: 3 },
+  { value: 'u', x: 23, y: 2 },
+  { value: 'p', x: 19, y: 3 },
+  { value: 'q', x: 21, y: 4 } ]
+*/
+```
+
+図を見ると、一番深いところの二分木は、左右の子ノードと親ノード間のx座標の距離が`1`です。  
+また、それより一つ浅いところは距離が`2`になっていて、さらに一つ浅いところは`4`になっています。  
+つまり、深さによって`[1, 2, 4, 8, ...]`のように間隔が大きくなります。
+
+左右にノードがあるだけの二分木の高さは`2`なので、間隔は`2 ** (高さ - 2)`で求められそうです。  
+間隔は一つ深いところになると半分になります。  
+x座標は、左が`現在のx座標 - 間隔`、右が`現在のx座標 + 間隔`になるので、これを引数にして再帰しましょう。
+
+最初の関数呼び出しの引数ですが、根ノードのx座標は`2 ** (高さ - 1) - 2 ** (高さ - 左端の子までの高さ) + 1`で求められます。  
+後述していますが、x座標を`0`から始めて左端のノードのx座標を見てからもう一度振りなおす手法でも、各ノードのx座標を求められるかと思います。
+
 #### 問66: 次の図のように、各ノードに座標を付与する`compactLayout`関数を実装せよ。
 
-あるノードの左→右、右→左を常に見ながら座標を決めていく
+![問66](./img/p66.gif)
+
+このレイアウトを用いると、全てのノードにおいて一定の対称性を保ちつつ、コンパクトに二分木を表現できます。  
+配置ルールは図を見て考えてください。  
+
+**ヒント**  
+ノードと後継ノード間の水平距離に着目しましょう。
+
+```js
+class BinaryTree {
+  /* 省略 */
+  compactLayout() {
+    const margin = (left, right) => {
+      if (left === null || right === null) return 1
+      if (left.right === null || right.left === null) return 1
+      return margin(left.right, right.left) + 1
+    }
+
+    const layout = (x, y, tree) => {
+      if (tree === null) return
+      tree.x = x
+      tree.y = y
+      
+      const m = margin(tree.left, tree.right)
+      layout(x - m, y + 1, tree.left)
+      layout(x + m, y + 1, tree.right)
+    }
+
+    const leftX = tree => tree.positions.sort(({x: a}, {x: b}) => a - b)[0].x
+
+    layout(0, 1, this)
+    const x = Math.abs(leftX(this)) + 1
+    layout(x, 1, this)
+
+    return this
+  }
+}
+
+const result = (new BinaryTree(['n', ['k', ['c', 'a', ['e', 'd', 'g']], 'm'], ['u', ['p', null, 'q'], null]])).compactLayout()
+result.positions
+/*
+[ { value: 'n', x: 5, y: 1 },
+  { value: 'k', x: 3, y: 2 },
+  { value: 'c', x: 2, y: 3 },
+  { value: 'a', x: 1, y: 4 },
+  { value: 'e', x: 3, y: 4 },
+  { value: 'd', x: 2, y: 5 },
+  { value: 'g', x: 4, y: 5 },
+  { value: 'm', x: 4, y: 3 },
+  { value: 'u', x: 7, y: 2 },
+  { value: 'p', x: 6, y: 3 },
+  { value: 'q', x: 7, y: 4 } ]
+*/
+```
+
+間隔は`1`が標準で、左の子ノードの右、右の子ノードの左があると`2`になるようです。  
+また、左右右、右左左が両方とも存在すると`3`になることが分かります。  
+`margin`関数はこの比較を再帰呼び出しですることで、間隔を算出しています。  
+この間隔を引けば左側のx座標、足せば右側のx座標が求められます。
+
+根ノードのx座標が不明なので、`0`として座標を計算します。  
+その後、`左端のノードのx座標の絶対値 + 1`を初期のx座標とし、再び座標を計算します。
+
 
 
 ## GitHub

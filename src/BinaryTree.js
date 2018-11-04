@@ -43,6 +43,178 @@ export default class BinaryTree {
   }
 
   /**
+   * 葉の数を返す
+   * @returns {number} 葉の数
+   */
+  get countLeaves() {
+    const count = tree => {
+      if (tree === null) return 0
+      const { left, right } = tree
+      return left === null && right === null ? 1 : count(left) + count(right)
+    }
+    return count(this)
+  }
+
+  /**
+   * 葉のリストを返す
+   * @returns {any[]} 葉のリスト
+   */
+  get leaves() {
+    const take = tree => {
+      if (tree === null) return []
+      const { value, left, right } = tree
+      return left === null && right === null ? [value] : [...take(left), ...take(right)]
+    }
+    return take(this)
+  }
+
+  /**
+   * 内部ノードのリストを返す
+   * @returns {any[]} 内部ノードのリスト
+   */
+  get internals() {
+    const take = tree => {
+      if (tree === null) return []
+      const { value, left, right } = tree
+      return left === null && right === null ? [] : [value, ...take(left), ...take(right)]
+    }
+    return take(this)
+  }
+
+  /**
+   * 指定した深さのノードのリストを返す
+   * @param {number} level 深さ
+   * @returns {any[]} ノードのリスト
+   */
+  atLevel(level) {
+    if (level === 1) return [this.value]
+
+    if (level > 1) {
+      const left = this.left === null ? [] : this.left.atLevel(level - 1)
+      const right = this.right === null ? [] : this.right.atLevel(level - 1)
+      return [...left, ...right]
+    }
+    return []
+  }
+
+  /**
+   * 完全二分木かどうかを返す
+   * @returns {boolean} 完全二分木かどうか
+   */
+  get isCompleteBinaryTree() {
+    const equals = (x, y) => {
+      if (x === null && y === null) return true
+      if (x !== null && y !== null) return equals(x.left, y.left) && equals(x.right, y.right)
+      return false
+    }
+    return equals(this, BinaryTree.completeBinaryTree(this.countNodes))
+  }
+
+  /**
+   * 各ノードの座標のリストを返す
+   * @returns {{ value: any, x: number, y: number }[]} ノードの座標のリスト
+   */
+  get positions() {
+    const f = tree => {
+      if (tree === null) return []
+      const { value, x, y } = tree
+      return [{ value, x, y }, ...f(tree.left), ...f(tree.right)]
+    }
+    return f(this)
+  }
+
+  /**
+   * ノードに座標を割り振る  
+   * x座標は通りがけ順に走査したときの順番、y座標はそのノードがある深さとする
+   * @returns {BinaryTree} this
+   */
+  layout() {
+    const f = (x, y, tree) => {
+      if (tree === null) return x
+      
+      const lx = f(x, y + 1, tree.left)
+      tree.x = lx
+      tree.y = y
+
+      return f(lx + 1, y + 1, tree.right)
+    }
+    
+    f(1, 1, this)
+    return this
+  }
+
+  /**
+   * 二分木の高さを返す
+   * @returns {number} 高さ
+   */
+  get height() {
+    const f = tree => tree === null ? 0 : Math.max(f(tree.left), f(tree.right)) + 1
+    return f(this)
+  }
+
+  /**
+   * 左部分木だけで二分木の高さを測る
+   * @returns {number} 高さ
+   */
+  get leftHeight() {
+    const f = tree => tree === null ? 0 : f(tree.left) + 1
+    return f(this)
+  }
+
+  /**
+   * なるべく対称となるように、幅を広めにとってノードに座標を割り振る
+   * @returns {BinaryTree} this
+   */
+  wideLayout() {
+    const f = (x, y, sep, tree) => {
+      if (tree === null) return
+
+      tree.x = x
+      tree.y = y
+      f(x - sep, y + 1, sep / 2, tree.left)
+      f(x + sep, y + 1, sep / 2, tree.right)
+    }
+
+    const h = this.height
+    const lh = this.leftHeight
+    const x = 2 ** (h - 1) - 2 ** (h - lh) + 1
+    const sep = 2 ** (h - 2)
+
+    f(x, 1, sep, this)
+    return this
+  }
+
+  /**
+   * なるべく対称性を保ちつつ、コンパクトになるようにノードに座標を割り振る
+   * @returns {BinaryTree} this
+   */
+  compactLayout() {
+    const margin = (left, right) => {
+      if (left === null || right === null) return 1
+      if (left.right === null || right.left === null) return 1
+      return margin(left.right, right.left) + 1
+    }
+
+    const layout = (x, y, tree) => {
+      if (tree === null) return
+      tree.x = x
+      tree.y = y
+      
+      const m = margin(tree.left, tree.right)
+      layout(x - m, y + 1, tree.left)
+      layout(x + m, y + 1, tree.right)
+    }
+
+    const leftX = tree => tree.positions.sort(({x: a}, {x: b}) => a - b)[0].x
+
+    layout(0, 1, this)
+    const x = Math.abs(leftX(this)) + 1
+    layout(x, 1, this)
+
+    return this
+  }
+
+  /**
    * 木構造をJSONにして返す
    * @returns {string} JSON
    */
@@ -171,3 +343,9 @@ BinaryTree.hbalTreeNodes = n => {
   return result
 }
 
+/**
+ * 指定されたノード数の完全二分木を生成する
+ * @param {number} n ノード数
+ * @returns {BinaryTree} 完全二分木
+ */
+BinaryTree.completeBinaryTree = n => ((f = x => x > n ? null : new BinaryTree('x', f(x * 2), f(x * 2 + 1))) => f(1))()
