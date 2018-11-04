@@ -52,9 +52,4 @@ describe('問61～69: 二分木、続き', () => {
       { value: 'q', x: 7, y: 4 } 
     ])
   })
-
-  test('', () => {
-    const t = (new BinaryTree(['n', ['k', ['c', null, ['e', ['d', 'a', null], 'g']], 'm'], ['u', ['p', null, 'q'], null]])).compactLayout().positions
-    console.log(t)
-  })
 })

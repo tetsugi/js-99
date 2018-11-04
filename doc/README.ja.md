@@ -851,7 +851,7 @@ BinaryTree {
 
 次のようにノードに座標を割り振ります。
 
-- x座標は、通りがけ順に走査したときの順番
+- x座標は、中順に走査したときの順番
 - y座標は、そのノードがある深さ
 
 結果が見づらくなるので、各ノードの座標を分かりやすく取得できる`positions`関数もついでに定義しましょう。
@@ -932,17 +932,59 @@ result.positions
 
 #### 問67: 文字列をパースして二分木にする`fromString`関数を実装せよ。
 
-文字列表現は`x(y,a(,b))`のようにして与えられます。
+二分木の文字列表現は`x(y,a(,b))`のようにして与えられます。
 
+```js
+BinaryTree.stringToTree('x(y,a(,b))')
+/*
+BinaryTree {
+  value: 'x',
+  left: BinaryTree { value: 'y', left: null, right: null },
+  right:
+    BinaryTree {
+      value: 'a',
+      left: null,
+      right: BinaryTree { value: 'b', left: null, right: null } } }
+*/
+```
 
-#### 問68: 二分木を行きがけ順に走査する`treeToPreorder`関数と、通りがけ順に走査する`treeToInorder`関数を実装せよ。また、行きがけ順と通りがけ順に走査した結果を用いて二分木を生成する`preInTree`関数を実装せよ。
+#### 問68: 二分木を前順に走査する`preorder`関数と、中順に走査する`inorder`関数を実装せよ。また、前順と中順に走査した結果を用いて二分木を生成する`preInTree`関数を実装せよ。
 
-#### 問69: 次のような文字列を二分木に変換する`ds2tree`関数と、逆変換する`tree2ds`関数を実装せよ。
+前順と中順で走査した結果があれば、二分木の木構造は一通りに定められます。
+
+```js
+const tree = BinaryTree.stringToTree('a(b(d,e),c(,f(g,)))')
+tree.preorder // [ 'a', 'b', 'd', 'e', 'c', 'f', 'g' ]
+tree.inorder  // [ 'd', 'b', 'e', 'a', 'c', 'g', 'f' ]
+BinaryTree.preInTree(tree.preorder, tree.inorder)
+/*
+BinaryTree {
+  value: 'a',
+  left:
+    BinaryTree {
+      value: 'b',
+      left: BinaryTree { value: 'd', left: null, right: null },
+      right: BinaryTree { value: 'e', left: null, right: null } },
+  right:
+    BinaryTree {
+      value: 'c',
+      left: null,
+      right:
+        BinaryTree {
+          value: 'f',
+          left: BinaryTree { value: 'g', left: null, right: null },
+          right: null } } }
+*/
+```
+
+#### 問69: 次のような文字列を二分木に変換する`dotstrToTree`関数と、逆変換する`toDotstr`関数を実装せよ。
 
 二分木は`'abd..e..c.fg...'`のような文字列で表現されて渡されます。`.`は`null`とし、各ノードには1文字しか入りません。  
 これをパースして、次のような結果になるようにしてください。
 
 ```js
+const tree = BinaryTree.dotstrToTree('abd..e..c.fg...') // 問68の二分木と同じ
+tree.toDotstr // abd..e..c.fg...
 ```
 
 ### 問70～73: 多分木
@@ -2371,7 +2413,7 @@ BinaryTree {
 
 次のようにノードに座標を割り振ります。
 
-- x座標は、通りがけ順に走査したときの順番
+- x座標は、中順に走査したときの順番
 - y座標は、そのノードがある深さ
 
 結果が見づらくなるので、各ノードの座標を分かりやすく取得できる`positions`関数もついでに定義しましょう。
@@ -2423,7 +2465,7 @@ result.positions
 ```
 
 `positions`は、各ノードの`value`と`x`と`y`プロパティを入れたオブジェクトをまとめた配列を返すようにします。  
-通りがけ順の走査では、一度左側の子を再帰で見てから、今見ているノードのx座標を決定します。  
+中順の走査では、一度左側の子を再帰で見てから、今見ているノードのx座標を決定します。  
 その後、右側の子のx座標を`決定されたx座標 + 1`として再帰呼び出しし、これを戻り値とします。
 
 #### 問65: 次の図のように、各ノードに座標を付与する`wideLayout`関数を実装せよ。
@@ -2561,7 +2603,174 @@ result.positions
 根ノードのx座標が不明なので、`0`として座標を計算します。  
 その後、`左端のノードのx座標の絶対値 + 1`を初期のx座標とし、再び座標を計算します。
 
+#### 問67: 文字列をパースして二分木にする`fromString`関数を実装せよ。
 
+二分木の文字列表現は`x(y,a(,b))`のようにして与えられます。
+
+```js
+BinaryTree.stringToTree = str => {
+  if (str === null) return null
+
+  const regex = /^([^\(\,]+)\((.+)\)$/
+  const groups = regex.exec(str)
+  
+  if (groups === null) {
+    if (str.indexOf('(') !== -1 || str.indexOf(')') !== -1 || str.indexOf(',') !== -1) throw new Error('parse error')
+    return new BinaryTree(str)
+  }
+  
+  const [, id, arg] = groups
+  const args = []
+  let value = null
+  let brace = 0
+
+  for (let i = 0; i < arg.length; i++) {
+    const current = arg[i]
+
+    if (current === ',' && brace === 0) {
+      args.push(value)
+      value = null
+    } else {
+      value = (value || '') + current
+    
+      brace = current === '(' ? brace + 1 
+        : current === ')' ? brace - 1 
+        : brace
+    }
+
+    if (i === arg.length - 1) { args.push(value) }
+  }
+  if (args.length !== 2) throw new Error('parse error')
+
+  const [left, right] = args
+  return new BinaryTree(id, BinaryTree.stringToTree(left), BinaryTree.stringToTree(right))
+}
+
+BinaryTree.stringToTree('x(y,a(,b))')
+/*
+BinaryTree {
+  value: 'x',
+  left: BinaryTree { value: 'y', left: null, right: null },
+  right:
+    BinaryTree {
+      value: 'a',
+      left: null,
+      right: BinaryTree { value: 'b', left: null, right: null } } }
+*/
+```
+
+正規表現`^([^\(\,]+)\((.+)\)$`でノードの値と括弧の中の文字列を抜き出します。  
+一致しなかった場合はノードの値だけなので、括弧やカンマが含まれていないか確認してから二分木インスタンスを生成して返します。  
+
+一致した場合、括弧の中の文字列を調べなければなりません。  
+括弧に囲われていないカンマで左右を区切りたいので、変数`brace`で括弧で囲われているかどうかを判別します。  
+文字列を二つに分けられたら`stringToTree`関数を再帰して左部分木と右部分木も構築します。
+
+#### 問68: 二分木を前順に走査する`preorder`関数と、中順に走査する`inorder`関数を実装せよ。また、前順と中順に走査した結果を用いて二分木を生成する`preInTree`関数を実装せよ。
+
+前順と中順で走査した結果があれば、二分木の木構造は一通りに定められます。
+
+```js
+class BinaryTree {
+  /* 省略 */
+  get preorder() {
+    const f = tree => tree === null ? [] : [tree.value, ...f(tree.left), ...f(tree.right)]
+    return f(this)
+  }
+
+  get inorder() {
+    const f = tree => tree === null ? [] : [...f(tree.left), tree.value, ...f(tree.right)]
+    return f(this)
+  }
+}
+
+BinaryTree.preInTree = (preorder, inorder) => {
+  if (preorder.length === 0 || inorder.length === 0) return null
+  if (inorder.length === 1) return new BinaryTree(inorder[0])
+
+  const [x, ...xs] = preorder
+  const index = inorder.indexOf(x)
+  if (index === -1) return BinaryTree.preInTree(xs, inorder)
+
+  const left = inorder.slice(0, index)
+  const right = inorder.slice(index + 1, inorder.length)
+
+  return new BinaryTree(x, BinaryTree.preInTree(xs, left), BinaryTree.preInTree(xs, right))
+}
+
+const tree = BinaryTree.stringToTree('a(b(d,e),c(,f(g,)))')
+tree.preorder // [ 'a', 'b', 'd', 'e', 'c', 'f', 'g' ]
+tree.inorder  // [ 'd', 'b', 'e', 'a', 'c', 'g', 'f' ]
+BinaryTree.preInTree(tree.preorder, tree.inorder)
+/*
+BinaryTree {
+  value: 'a',
+  left:
+    BinaryTree {
+      value: 'b',
+      left: BinaryTree { value: 'd', left: null, right: null },
+      right: BinaryTree { value: 'e', left: null, right: null } },
+  right:
+    BinaryTree {
+      value: 'c',
+      left: null,
+      right:
+        BinaryTree {
+          value: 'f',
+          left: BinaryTree { value: 'g', left: null, right: null },
+          right: null } } }
+*/
+```
+
+前順、中順で走査をするときは、その名の通り再帰すればノードを順番に集められます。  
+`preInTree`関数ですが、まず`inorder`の長さが`1`ならその要素で二分木を作って返します。  
+`preorder`の先頭の要素が`inorder`に無い場合、`preorder`の残りの要素から探します。  
+`inorder`に含まれる場合は、`inorder`を左部分木に含まれる要素の配列`left`と右部分木に含まれる要素の配列`right`に分けます。  
+それぞれの配列を`preInTree`関数の`inorder`として渡して再帰させれば、目的の二分木を構築できます。
+
+#### 問69: 次のような文字列を二分木に変換する`dotstrToTree`関数と、逆変換する`toDotstr`関数を実装せよ。
+
+二分木は`'abd..e..c.fg...'`のような文字列で表現されて渡されます。`.`は`null`とし、各ノードには1文字しか入りません。  
+これをパースして、次のような結果になるようにしてください。
+
+```js
+class BinaryTree {
+  /* 省略 */
+  toDotstr() {
+    const f = tree => tree === null ? '.' : tree.value + f(tree.left) + f(tree.right)
+    return f(this)
+  }
+}
+
+BinaryTree.dotstrToTree = ds => {
+  const f = str => {
+    if (str.length === 0) return [null, '']
+
+    let [x, ...xs] = [...str]
+    xs = xs.join('')
+
+    if (x === '.') return [null, xs]
+    
+    const [left, ys] = f(xs)
+    const [right, rest] = f(ys)
+    return [new BinaryTree(x, left, right), rest]
+  }
+  return f(ds)[0]
+}
+
+const tree = BinaryTree.dotstrToTree('abd..e..c.fg...') // 問68の二分木と同じ
+tree.toDotstr() // abd..e..c.fg...
+```
+
+戻り値は`[二分木, 残りの文字列]`とします。  
+
+`dotstrToTree`関数では、渡した文字列を先頭から順番に見ていきます。  
+見ている文字が`.`なら、`[null, 残りの文字列]`を返します。  
+それ以外のときは、まず左部分木を構築しつつ残りの文字列を取得し、右部分木をその残りの文字列から構築します。  
+そして、今見ている文字を根とした二分木と残りの文字列のペアを返します。
+
+`toDotstr`関数は前順で走査するだけです。  
+ノードの値が一文字でない場合は正しく変換されないため、この文字列表現は一文字の場合にしか使えません。
 
 ## GitHub
 

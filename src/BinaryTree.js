@@ -215,6 +215,34 @@ export default class BinaryTree {
   }
 
   /**
+   * 前順で走査してノードの配列を返す
+   * @returns {any[]} ノードの配列
+   */
+  get preorder() {
+    const f = tree => tree === null ? [] : [tree.value, ...f(tree.left), ...f(tree.right)]
+    return f(this)
+  }
+
+  /**
+   * 中順で走査してノードの配列を返す
+   * @returns {any[]} ノードの配列
+   */
+  get inorder() {
+    const f = tree => tree === null ? [] : [...f(tree.left), tree.value, ...f(tree.right)]
+    return f(this)
+  }
+
+  /**
+   * 木構造を文字とドットで表現した文字列として返す  
+   * 全てのノードの値がstringかつ一文字の場合でないと正しく動作しない
+   * @returns {string} 木構造を文字とドットで表現した文字列
+   */
+  toDotstr() {
+    const f = tree => tree === null ? '.' : tree.value + f(tree.left) + f(tree.right)
+    return f(this)
+  }
+
+  /**
    * 木構造をJSONにして返す
    * @returns {string} JSON
    */
@@ -349,3 +377,87 @@ BinaryTree.hbalTreeNodes = n => {
  * @returns {BinaryTree} 完全二分木
  */
 BinaryTree.completeBinaryTree = n => ((f = x => x > n ? null : new BinaryTree('x', f(x * 2), f(x * 2 + 1))) => f(1))()
+
+/**
+ * 二分木の文字列表現を二分木に変換する
+ * @param {string} str 二分木の文字列表現
+ * @returns {BinaryTree} 二分木
+ */
+BinaryTree.stringToTree = str => {
+  if (str === null) return null
+
+  const regex = /^([^\(\,]+)\((.+)\)$/
+  const groups = regex.exec(str)
+  
+  if (groups === null) {
+    if (str.indexOf('(') !== -1 || str.indexOf(')') !== -1 || str.indexOf(',') !== -1) throw new Error('parse error')
+    return new BinaryTree(str)
+  }
+  
+  const [, id, arg] = groups
+  const args = []
+  let value = null
+  let brace = 0
+
+  for (let i = 0; i < arg.length; i++) {
+    const current = arg[i]
+
+    if (current === ',' && brace === 0) {
+      args.push(value)
+      value = null
+    } else {
+      value = (value || '') + current
+    
+      brace = current === '(' ? brace + 1 
+        : current === ')' ? brace - 1 
+        : brace
+    }
+
+    if (i === arg.length - 1) { args.push(value) }
+  }
+  if (args.length !== 2) throw new Error('parse error')
+
+  const [left, right] = args
+  return new BinaryTree(id, BinaryTree.stringToTree(left), BinaryTree.stringToTree(right))
+}
+
+/**
+ * 前順と中順で走査して生成された配列から二分木を構築する
+ * @param {any[]} preorder 前順
+ * @param {any[]} inorder 中順
+ * @returns {BinaryTree} 二分木
+ */
+BinaryTree.preInTree = (preorder, inorder) => {
+  if (preorder.length === 0 || inorder.length === 0) return null
+  if (inorder.length === 1) return new BinaryTree(inorder[0])
+
+  const [x, ...xs] = preorder
+  const index = inorder.indexOf(x)
+  if (index === -1) return BinaryTree.preInTree(xs, inorder)
+
+  const left = inorder.slice(0, index)
+  const right = inorder.slice(index + 1, inorder.length)
+
+  return new BinaryTree(x, BinaryTree.preInTree(xs, left), BinaryTree.preInTree(xs, right))
+}
+
+/**
+ * 文字とドットで表現した二分木を変換する
+ * @param {string} 文字とドットで表現した二分木
+ * @returns {BinaryTree} 二分木
+ */
+BinaryTree.dotstrToTree = ds => {
+  const f = str => {
+    if (str.length === 0) return [null, '']
+
+    let [x, ...xs] = [...str]
+    xs = xs.join('')
+
+    if (x === '.') return [null, xs]
+    
+    const [left, ys] = f(xs)
+    const [right, rest] = f(ys)
+    return [new BinaryTree(x, left, right), rest]
+  }
+  return f(ds)[0]
+}
