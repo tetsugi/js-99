@@ -989,14 +989,68 @@ tree.toDotstr // abd..e..c.fg...
 
 ### 問70～73: 多分木
 
-#### 問70: 多分木クラス`MultiwayTree`を実装せよ。ノードの数を返す`count`関数を実装せよ。また、次のような文字列表現を変換する`stringToTree`関数と、逆変換する`treeToString`関数を実装せよ。
+二分木と違って比較的簡単な問題しかないので、こちらから先に着手するのも手です。
 
-#### 問71: 根から全ノードまでの経路長の総和を求める`ipl`関数を実装せよ。
+#### 問70: 多分木クラス`MultiwayTree`を実装せよ。また、ノードの数を返す`count`関数を実装せよ。
 
-#### 問72: ボトムアップ式にノードを列挙する`bottomUp`関数を実装せよ。
+二分木と同様に、配列から変換できるようにしておきます。
 
-#### 問73: Lispのような木構造の文字列表現を返す`lisp`関数を実装せよ。
+```js
+const tree = new MultiwayTree(['a', ['f', 'g'], 'c', ['b', 'd', 'e']])
+console.log(tree)
+/*
+MultiwayTree {
+  '0':
+    MultiwayTree { '0': MultiwayTree { value: 'g' }, value: 'f' },
+  '1': MultiwayTree { value: 'c' },
+  '2':
+    MultiwayTree {
+      '0': MultiwayTree { value: 'd' },
+      '1': MultiwayTree { value: 'e' },
+      value: 'b' },
+  value: 'a' }
+*/
+tree.count // 7
+```
 
+#### 問70A: 次のような文字列表現を変換する`stringToTree`関数と、逆変換する`toString`関数を実装せよ。
+
+問70の多分木は`'afg^^c^bd^e^^^'`のように表現されます。  
+`^`は前の深さに戻るという意味です。根より前に戻った場合、そこで木構造が確定します。
+
+```js
+const tree = MultiwayTree.stringToTree('afg^^c^bd^e^^^')
+console.log(tree) // 問70の多分木と同じ
+tree.toString() // afg^^c^bd^e^^^
+```
+
+#### 問71: 根から全ノードまでの経路長の総和を求める`internalPathLength`関数を実装せよ。
+
+```js
+MultiwayTree.stringToTree('afg^^c^bd^e^^^').internalPathLength // 9
+```
+
+#### 問72: 多分木を後順に走査する`postorder`関数を実装せよ。
+
+```js
+MultiwayTree.stringToTree('afg^^c^bd^e^^^').postorder
+// [ 'g', 'f', 'c', 'd', 'e', 'b', 'a' ]
+```
+
+#### 問73: Lispのような木構造の配列表現を返す`lisp`関数を実装せよ。
+
+配列から多分木に変換できるようにしていましたが、`lisp`関数で逆変換もできるようにします。  
+関数名が`lisp`なのは、この木構造の配列での表現がLispライクだからです。  
+（元々の問題では、`['a', ['b', 'c']]`が`(a (b c))`のような表現になっています）
+
+```js
+new MultiwayTree('a').lisp
+new MultiwayTree(['a', 'b']).lisp
+new MultiwayTree(['a', ['b', 'c']]).lisp
+new MultiwayTree(['b', 'd', 'e']).lisp
+new MultiwayTree(['a', ['f', 'g'], 'c', ['b', 'd', 'e']]).lisp
+// 結果は全て引数と同じになる
+```
 
 ### 問80～89: グラフ
 
@@ -1014,7 +1068,9 @@ n * nのチェス盤の上を指定したマスに置かれたナイトが全て
 ## 解答例・解説
 
 解答例の解き方は短く書こうとしていたり、丁寧に書こうとしていたりで、その時の気分によってまちまちです。  
-パフォーマンスも考慮していません。  
+パフォーマンスも考慮していません。知識不足で冗長になっている部分もあります。  
+また、再帰による解法が非常に多くなっています。
+
 実際に解くときは無理して短く書くよりも、読み手が分かりやすいコードを書くようにしましょう。
 
 ### 問1～10: 配列
@@ -1954,7 +2010,7 @@ class BinaryTree {
   
   constructor(value, left = null, right = null) {
     if (Array.isArray(value)) { [value, left, right] = value } 
-    else if (BinaryTree.isBinaryTree(value)) { ({value, left, right} = value) }
+    else if (value instanceof BinaryTree) { ({value, left, right} = value) }
 
     this.value = value
     this.left = left !== null ? new BinaryTree(left) : left
@@ -1965,7 +2021,6 @@ class BinaryTree {
     return JSON.stringify(this, null, 2)
   }
 }
-BinaryTree.isBinaryTree = v => v !== null && typeof(v) === 'object' && v.hasOwnProperty('value') && v.hasOwnProperty('left') && v.hasOwnProperty('right')
 
 const tree = new BinaryTree(['a', ['b', 'd', 'e'], ['c', null, ['f', 'g', null]]])
 console.log(tree.toString())
@@ -2772,7 +2827,179 @@ tree.toDotstr() // abd..e..c.fg...
 `toDotstr`関数は前順で走査するだけです。  
 ノードの値が一文字でない場合は正しく変換されないため、この文字列表現は一文字の場合にしか使えません。
 
+
+### 問70～73: 多分木
+
+#### 問70: 多分木クラス`MultiwayTree`を実装せよ。また、ノードの数を返す`count`関数を実装せよ。
+
+二分木と同様に、配列から変換できるようにしておきます。
+
+```js
+class MultiwayTree {
+
+  constructor(value, ...args) {
+    if (Array.isArray(value)) { [value, ...args] = value } 
+    else if (value instanceof MultiwayTree) { args = [...value]; ({ value } = value) }
+
+    this.value = value
+    args.forEach((e, i) => this[i] = e !== null ? new MultiwayTree(e) : e)
+  }
+
+  * [Symbol.iterator]() {
+    for (let i = 0; typeof(this[i]) !== 'undefined'; i++) {
+      yield this[i]
+    }
+  }
+
+  get count() {
+    const f = x => [...x].map(f).reduce((a, c) => a + c, 1)
+    return f(this)
+  }
+}
+
+const tree = new MultiwayTree(['a', ['f', 'g'], 'c', ['b', 'd', 'e']])
+console.log(tree)
+/*
+MultiwayTree {
+  '0':
+    MultiwayTree { '0': MultiwayTree { value: 'g' }, value: 'f' },
+  '1': MultiwayTree { value: 'c' },
+  '2':
+    MultiwayTree {
+      '0': MultiwayTree { value: 'd' },
+      '1': MultiwayTree { value: 'e' },
+      value: 'b' },
+  value: 'a' }
+*/
+tree.count // 7
+```
+
+多分木は配列と似た構造になっています。こう表現することで子が増えても挿入することができるようになります。  
+`MultiwayTree`は`Iterable`にすると子が参照しやすくなって便利でしょう。  
+`[Symbol.iterator]()`メソッドを実装する必要がありますが、ジェネレータ関数にすると楽なので`*`を頭につけておきます。  
+`this[i]`が`undefined`になるまでループします。ループ内では`yield`で`this[i]`を戻しましょう。
+これだけでスプレッド演算子`...`や`for...of`が使えるようになります。
+
+コンストラクタは二分木のときとさほど変わりません。  
+引数が複数あるときはループして該当する`index`に部分木を入れます。
+
+`count`では、子に関数を適用した後、`reduce`で合計を求めます。  
+根が含まれるので初期値は`1`にしておきます。
+
+#### 問70A: 次のような文字列表現を変換する`stringToTree`関数と、逆変換する`toString`関数を実装せよ。
+
+問70の多分木は`'afg^^c^bd^e^^^'`のように表現されます。  
+`^`は前の深さに戻るという意味です。根より前に戻った場合、そこで木構造が確定します。
+
+```js
+class MultiwayTree {
+  /* 省略 */
+  push(child) {
+    let i = 0
+
+    while (true) if (this[i]) { i++ } else {
+      this[i] = new MultiwayTree(child)
+      return i + 1
+    }
+  }
+
+  toString() {
+    return `${ this.value }${ [...this].join('') }^`
+  }
+}
+
+MultiwayTree.stringToTree = str => {
+  if (str.length === 0) return null
+  const trees = []
+  
+  for (const s of str) if (s === '^') { 
+    const parent = trees[trees.length - 2]
+    if (parent) { parent.push(trees.pop()) } else break
+
+  } else {
+    trees.push(new MultiwayTree(s))
+  }
+
+  return trees[0]
+}
+
+const tree = MultiwayTree.stringToTree('afg^^c^bd^e^^^')
+console.log(tree) // 問70の多分木と同じ
+tree.toString() // afg^^c^bd^e^^^
+```
+
+`toString`はノードの値、子の文字列表現、`^`を結合したものを返します。  
+オブジェクトを文字列にしようとしたときに自動的に`toString`が呼ばれるのを利用しています。
+
+`stringToTree`関数は文字列を先頭から順番に見て、`^`と等しければ親の多分木に子を挿入します。  
+（親となる多分木は`trees`の最後尾の一つ前、その子となる多分木は最後尾に格納されています）  
+`push`関数で何も入っていない`index`に多分木を挿入できるようにしておきます。
+
+`^`以外の文字のときは、新しい多分木を生成して`trees`に保持しておきます。  
+`trees[0]`には構築された多分木が入っていることになるので、最後にそれを返します。
+
+#### 問71: 根から全ノードまでの経路長の総和を求める`internalPathLength`関数を実装せよ。
+
+```js
+class MultiwayTree {
+  /* 省略 */
+  get internalPathLength() {
+    const f = (tree, depth = 0) => [...tree].map(e => f(e, depth + 1)).reduce((a, c) => a + c, depth)
+    return f(this)
+  }
+}
+
+MultiwayTree.stringToTree('afg^^c^bd^e^^^').internalPathLength // 9
+```
+
+根から各ノードまでの経路長は、根から見た深さと等しくなります。  
+自身の深さと子の深さを足していけば、根から全ノードまでの経路長の総和を求められます。
+
+#### 問72: 多分木を後順に走査する`postorder`関数を実装せよ。
+
+```js
+class MultiwayTree {
+  /* 省略 */
+  get postorder() {
+    const f = tree => [...[...tree].map(f).reduce((a, c) => a.concat(c), []), tree.value]
+    return f(this)
+  }
+}
+
+MultiwayTree.stringToTree('afg^^c^bd^e^^^').postorder
+// [ 'g', 'f', 'c', 'd', 'e', 'b', 'a' ]
+```
+
+後順に走査するので、`tree.value`は配列の後ろ側に入れます。  
+子に対しては関数を適用した後、戻り値の配列を結合して展開するようにします。
+
+#### 問73: Lispのような木構造の配列表現を返す`lisp`関数を実装せよ。
+
+配列から多分木に変換できるようにしていましたが、`lisp`関数で逆変換もできるようにします。  
+関数名が`lisp`なのは、この木構造の配列での表現がLispライクだからです。  
+（元々の問題では、`['a', ['b', 'c']]`が`(a (b c))`のような表現になっています）
+
+```js
+class MultiwayTree {
+  /* 省略 */
+  get lisp() {
+    const f = tree => tree[0] ? [tree.value, ...[...tree].map(f)] : tree.value
+    return f(this)
+  }
+}
+
+new MultiwayTree('a').lisp
+new MultiwayTree(['a', 'b']).lisp
+new MultiwayTree(['a', ['b', 'c']]).lisp
+new MultiwayTree(['b', 'd', 'e']).lisp
+new MultiwayTree(['a', ['f', 'g'], 'c', ['b', 'd', 'e']]).lisp
+// 結果は全て引数と同じになる
+```
+
+子を持たなければ、`tree.value`をそのまま返します。  
+子を持つ場合、配列に`tree.value`と子に関数を適用したものを格納して返します。
+
 ## GitHub
 
-各問題のテストも実行できるようになっています。  
-ライブラリとしてバンドルする設定になっているため、自分用のJSライブラリの作り方が分からないときは参考になるかもしれません。
+[GitHubにリポジトリ](https://github.com/tetsugi/js-99)を作成してあります。  
+時間ができ次第、各問題のテストを実行できるようにする予定です。

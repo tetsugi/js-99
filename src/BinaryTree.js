@@ -13,7 +13,7 @@ export default class BinaryTree {
    */
   constructor(value, left = null, right = null) {
     if (Array.isArray(value)) { [value, left, right] = value } 
-    else if (BinaryTree.isBinaryTree(value)) { ({value, left, right} = value) }
+    else if (value instanceof BinaryTree) { ({value, left, right} = value) }
 
     this.value = value
     this.left = left !== null ? new BinaryTree(left) : left
@@ -250,13 +250,6 @@ export default class BinaryTree {
     return JSON.stringify(this, null, 2)
   }
 }
-
-/**
- * BinaryTreeオブジェクトかどうかを返す
- * @param {any} obj 調べる対称
- * @returns {boolean} BinaryTreeオブジェクトかどうか
- */
-BinaryTree.isBinaryTree = v => v !== null && typeof(v) === 'object' && v.hasOwnProperty('value') && v.hasOwnProperty('left') && v.hasOwnProperty('right')
 
 /**
  * 左部分木と右部分木のノードの数の差が1以下である二分木を全て生成する
