@@ -1054,6 +1054,62 @@ new MultiwayTree(['a', ['f', 'g'], 'c', ['b', 'd', 'e']]).lisp
 
 ### 問80～89: グラフ
 
+#### 問80: グラフを表現する`Graph`クラスを実装せよ。
+
+![問80](./img/p80.gif)
+
+頂点のリストと、辺（`[from, to, cost]`）のリストを渡すと、図のようなラベル付きグラフを構築できるようにします。  
+また、辺のリストのみ渡された場合でもグラフを構築できるようにします。  
+各辺はコストを持ちます。`cost`が渡されなかった場合は`Infinity`にします。
+
+どの頂点からでも、隣接する頂点が分かるようにしておきましょう。
+
+```js
+new Graph(['b', 'c', 'd', 'f', 'g', 'h', 'k'], [['b', 'c', 1], ['b', 'f', 2], ['c', 'f', 5], ['f', 'k', 3], ['g', 'h']])
+// new Graph([['b', 'c', 1], ['b', 'f', 2], ['c', 'f', 5], ['f', 'k', 3], ['g', 'h'], 'd'])
+/*
+Graph {
+  b: { from: [], to: [ [ 'c', 1 ], [ 'f', 2 ] ] },
+  c: { from: [ [ 'b', 1 ] ], to: [ [ 'f', 5 ] ] },
+  d: { from: [], to: [] },
+  f: { from: [ [ 'b', 2 ], [ 'c', 5 ] ], to: [ [ 'k', 3 ] ] },
+  g: { from: [], to: [ [ 'h', Infinity ] ] },
+  h: { from: [ [ 'g', Infinity ] ], to: [] },
+  k: { from: [ [ 'f', 3 ] ], to: [] } }
+*/
+```
+
+#### 問81: ある頂点から別の頂点までの経路を返す`paths`関数を実装せよ。
+
+```js
+new Graph([[1, 2], [2, 3], [1, 3], [3, 4], [4, 2], [5, 6]]).paths(1, 4)
+// [ [ 1, 2, 3, 4 ], [ 1, 3, 4 ] ]
+```
+
+#### 問82: 閉路（ある頂点から始まってある頂点へ帰るまでの経路）を見つける`cycle`関数を実装せよ。
+
+```js
+new Graph([[1, 2], [2, 3], [1, 3], [3, 4], [4, 2], [5, 6]]).cycle(2)
+// [ [ 2, 3, 4, 2 ] ]
+```
+
+#### 問83: 全ての[スパニングツリー](https://ja.wikipedia.org/wiki/%E5%85%A8%E5%9F%9F%E6%9C%A8)を構築する`spanningTree`関数を実装せよ。
+
+#### 問84: 最小スパニングツリーを[Prim法](https://ja.wikipedia.org/wiki/%E3%83%97%E3%83%AA%E3%83%A0%E6%B3%95)で構築する`prim`関数を実装せよ。
+
+#### 問85: 二つのグラフが[グラフ同型](https://ja.wikipedia.org/wiki/%E3%82%B0%E3%83%A9%E3%83%95%E5%90%8C%E5%9E%8B)であるかを返す`iso`関数を実装せよ。
+
+#### 問86: [Welsh-Powellの頂点彩色アルゴリズム](https://ja.wikipedia.org/wiki/%E3%82%B0%E3%83%A9%E3%83%95%E5%BD%A9%E8%89%B2#%E8%B2%AA%E6%AC%B2%E5%BD%A9%E8%89%B2)を使用して、隣接ノードが異なる色になるように彩色する`paint`関数を実装せよ。
+
+頂点を次数が小さくなる順序でソートした後、貪欲彩色を行います。
+
+#### 問87: 深さを優先してグラフを探索する`depthFirst`関数を実装せよ。
+
+#### 問88: グラフを連結しているもので分離する`connectedComponents`関数を実装せよ。
+
+#### 問89: グラフが[2部グラフ](https://ja.wikipedia.org/wiki/2%E9%83%A8%E3%82%B0%E3%83%A9%E3%83%95)かどうかを返す`isBipartite`関数を実装せよ。
+
+
 ### 問90～94: その他の問題
 
 #### 問90: [N-クイーン問題](https://ja.wikipedia.org/wiki/%E3%82%A8%E3%82%A4%E3%83%88%E3%83%BB%E3%82%AF%E3%82%A4%E3%83%BC%E3%83%B3)を解く`queens`関数を実装せよ。
@@ -1109,8 +1165,7 @@ elementAt([1, 2, 3], 2) // 2
 elementAt('JavaScript', 5) // S
 ```
 
-普通に配列の要素を参照しているだけなので、`elementAt`関数を作る意味は無いですね。  
-JavaScriptなので`index out of bounds`のようなエラーも投げられません。
+普通に配列の要素を参照しているだけなので、`elementAt`関数を作る意味は無いです。
 
 #### 問4: 配列や文字列の長さを返す`length`関数を実装せよ。
 
@@ -1126,7 +1181,7 @@ length('💃Hello, World!💃') // 15
 
 文字列の方には絵文字が混ざっています。  
 **絵文字はサロゲートペアで表現されているため、`length`で2文字扱いになります。**  
-スプレッド演算子を用いると、`[...'💃Hello!💃']`を`[ '💃', 'H', 'e', 'l', 'l', 'o', '!', '💃' ]`にできるため、`length`で正しい長さを返すことができます。
+スプレッド演算子を用いると、`[...'💃Hello!💃']`で`[ '💃', 'H', 'e', 'l', 'l', 'o', '!', '💃' ]`に変換できるため、`length`で正しい長さを返すことができます。
 
 さて、`length`の使用が禁止されているため、その代わりとなる方法を考えなければなりません。  
 `fill`は配列の要素を全て引数の値に変更して返します。`reduce`は配列の要素を左から右に読んでいき、何か処理をすることができます。  
@@ -1251,6 +1306,8 @@ encodeModified([1, 1, 2, 1, 2, 2, 3, 3, 3, 3]) // [[2, 1], 2, 1, [2, 2], [4, 3]]
 encodeModified('aaaabccaadeeee')
 // [[4, 'a'], 'b', [2, 'c'], [2, 'a'], 'd', [4, 'e']]
 ```
+
+`encode`の最初の要素が`1`になっているペアのみを`map`で展開します。
 
 #### 問12: ランレングス圧縮した配列をデコードする`decodeModified`関数を実装せよ。
 
@@ -1388,6 +1445,8 @@ const slice = (list, start, end = list.length) => {
 slice([1, 2, 3, 4], 2, 4) // [2, 3, 4]
 slice('abcdefghik', 3, 7) // cdefg
 ```
+
+指定した範囲内の要素を`for`文でそれぞれ参照して、要素を結合して返します。
 
 #### 問19: 配列や文字列の要素を左にn個ずらす`rotate`関数を実装せよ。
 
@@ -2993,13 +3052,128 @@ new MultiwayTree(['a', 'b']).lisp
 new MultiwayTree(['a', ['b', 'c']]).lisp
 new MultiwayTree(['b', 'd', 'e']).lisp
 new MultiwayTree(['a', ['f', 'g'], 'c', ['b', 'd', 'e']]).lisp
-// 結果は全て引数と同じになる
+// 結果は全てコンストラクタの引数と同じになる
 ```
 
 子を持たなければ、`tree.value`をそのまま返します。  
 子を持つ場合、配列に`tree.value`と子に関数を適用したものを格納して返します。
 
-## GitHub
 
-[GitHubにリポジトリ](https://github.com/tetsugi/js-99)を作成してあります。  
-時間ができ次第、各問題のテストを実行できるようにする予定です。
+### 問80～89: グラフ
+
+#### 問80: グラフを表現する`Graph`クラスを実装せよ。
+
+![問80](./img/p80.gif)
+
+頂点のリストと、辺（`[from, to, cost]`）のリストを渡すと、図のようなラベル付きグラフを構築できるようにします。  
+また、辺のリストのみ渡された場合でもグラフを構築できるようにします。  
+各辺はコストを持ちます。`cost`が渡されなかった場合は`Infinity`にします。
+
+どの頂点からでも、隣接する頂点が分かるようにしておきましょう。
+
+```js
+class Graph {
+
+  constructor(nodes, edges = null) {
+    if (edges) { 
+      nodes.forEach(label => this[label] = { from: [], to: [] })
+      edges.forEach(edge => this.connect(...edge))
+
+    } else nodes.forEach(e => {
+      if (!Array.isArray(e)) { 
+        this[e] = { from: [], to: [] }
+
+      } else {
+        let [from, to, cost] = e
+        cost = cost || Infinity
+        
+        if (!this[from]) { this[from] = { from: [], to: [] } }
+        if (!this[to]) { this[to] = { from: [], to: [] } }
+        
+        this[from].to.push([to, cost])
+        this[to].from.push([from, cost])
+      }
+    })
+  }
+
+  connect(from, to, cost = Infinity) {
+    if (!this[from] || !this[to]) throw new Error('missing node')
+    this[from].to.push([to, cost])
+    this[to].from.push([from, cost])
+  }
+}
+
+new Graph(['b', 'c', 'd', 'f', 'g', 'h', 'k'], [['b', 'c', 1], ['b', 'f', 2], ['c', 'f', 5], ['f', 'k', 3], ['g', 'h']])
+// new Graph([['b', 'c', 1], ['b', 'f', 2], ['c', 'f', 5], ['f', 'k', 3], ['g', 'h'], 'd'])
+/*
+Graph {
+  b: { from: [], to: [ [ 'c', 1 ], [ 'f', 2 ] ] },
+  c: { from: [ [ 'b', 1 ] ], to: [ [ 'f', 5 ] ] },
+  d: { from: [], to: [] },
+  f: { from: [ [ 'b', 2 ], [ 'c', 5 ] ], to: [ [ 'k', 3 ] ] },
+  g: { from: [], to: [ [ 'h', Infinity ] ] },
+  h: { from: [ [ 'g', Infinity ] ], to: [] },
+  k: { from: [ [ 'f', 3 ] ], to: [] } }
+*/
+```
+
+頂点のラベルをプロパティ名にします。プロパティを持っていない場合は、`{ from: [], to: [] }`を持たせます。  
+この`from`と`to`には`[ラベル, コスト]`のペアが格納され、行きと帰りの経路をコストを見て選択して辿ることができるようになっています。
+
+コンストラクタは引数が二つある場合と一つのみの場合で分岐させます。  
+頂点のリストがある場合は、辺は既に存在する頂点同士を結ばなければなりません。  
+そのため`connect`関数を定義し、頂点が存在していない場合はエラーを投げるようにしています。
+
+辺のリストのみ渡された場合は、最初の一回目の参照時はプロパティが定義されていないため気をつけます。
+
+#### 問81: ある頂点から別の頂点までの経路を返す`paths`関数を実装せよ。
+
+```js
+class Graph {
+  /* 省略 */
+  paths(from, to, already = []) {
+    const targets = this[from].to
+
+    if (targets.length === 0 || already.find(e => e === from)) return []
+    if (targets.find(([e,]) => e === to)) return [[from, to]]
+    
+    return targets
+      .map(([e,]) => {
+        const result = this.paths(e, to, already.concat(from))
+        return result.length ? [from].concat(...result) : []
+      })
+      .filter(e => e.length)
+  }
+}
+
+new Graph([[1, 2], [2, 3], [1, 3], [3, 4], [4, 2], [5, 6]]).paths(1, 4)
+// [ [ 1, 2, 3, 4 ], [ 1, 3, 4 ] ]
+```
+
+何も見つからなかった場合は空の配列を返します。  
+また、既に辿った頂点のラベルを`already`に格納して毎回引数として渡します。  
+`already`に`from`が含まれているなら辿ったことがあるため空の配列を返します。これで閉路による無限ループを防げます。
+
+`this[from].to`には今見ている頂点と、行先の別の頂点間の経路が格納されています。  
+つまり、この配列に目的の頂点のラベル`to`が含まれているなら、`[[from, to]]`を返してもよいことになります。
+
+含まれていない場合、`this[from].to`に格納されているラベル全てに`paths`関数を適用しましょう。  
+`from`には、移動先の頂点のラベルを渡します。`to`は変わらないのでそのまま渡します。  
+`already`には、`already`と`from`を結合して渡します。  
+経路が見つからなかった場合は空の配列が返ってきているため、最後にフィルタして返します。
+
+#### 問82: 閉路（ある頂点から始まってある頂点へ帰るまでの経路）を見つける`cycle`関数を実装せよ。
+
+```js
+class Graph {
+  /* 省略 */
+  cycle(target) { 
+    return this.paths(target, target)
+  }
+}
+
+new Graph([[1, 2], [2, 3], [1, 3], [3, 4], [4, 2], [5, 6]]).cycle(2)
+// [ [ 2, 3, 4, 2 ] ]
+```
+
+`paths`関数の`from`と`to`を同じ頂点のラベルにして呼び出します。
