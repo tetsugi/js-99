@@ -1060,44 +1060,73 @@ new MultiwayTree(['a', ['f', 'g'], 'c', ['b', 'd', 'e']]).lisp
 
 頂点のリストと、辺（`[from, to, cost]`）のリストを渡すと、図のようなラベル付きグラフを構築できるようにします。  
 また、辺のリストのみ渡された場合でもグラフを構築できるようにします。  
-各辺はコストを持ちます。`cost`が渡されなかった場合は`Infinity`にします。
+各辺はコストを持ちます。`cost`が渡されなかった場合は`1`にします。
 
-どの頂点からでも、隣接する頂点が分かるようにしておきましょう。
+クラスの設計は今後の問題が解きやすいようにしてください。  
+この結果通りのインスタンスが生成されなくても構いません。
 
 ```js
 new Graph(['b', 'c', 'd', 'f', 'g', 'h', 'k'], [['b', 'c', 1], ['b', 'f', 2], ['c', 'f', 5], ['f', 'k', 3], ['g', 'h']])
 // new Graph([['b', 'c', 1], ['b', 'f', 2], ['c', 'f', 5], ['f', 'k', 3], ['g', 'h'], 'd'])
 /*
 Graph {
-  b: { from: [], to: [ [ 'c', 1 ], [ 'f', 2 ] ] },
-  c: { from: [ [ 'b', 1 ] ], to: [ [ 'f', 5 ] ] },
-  d: { from: [], to: [] },
-  f: { from: [ [ 'b', 2 ], [ 'c', 5 ] ], to: [ [ 'k', 3 ] ] },
-  g: { from: [], to: [ [ 'h', Infinity ] ] },
-  h: { from: [ [ 'g', Infinity ] ], to: [] },
-  k: { from: [ [ 'f', 3 ] ], to: [] } }
+  b: { from: {}, to: { c: 1, f: 2 } },
+  c: { from: { b: 1 }, to: { f: 5 } },
+  d: { from: {}, to: {} },
+  f: { from: { b: 2, c: 5 }, to: { k: 3 } },
+  g: { from: {}, to: { h: 1 } },
+  h: { from: { g: 1 }, to: {} },
+  k: { from: { f: 3 }, to: {} } }
 */
 ```
 
 #### 問81: ある頂点から別の頂点までの経路を返す`paths`関数を実装せよ。
 
 ```js
-new Graph([[1, 2], [2, 3], [1, 3], [3, 4], [4, 2], [5, 6]]).paths(1, 4)
-// [ [ 1, 2, 3, 4 ], [ 1, 3, 4 ] ]
+new Graph([[1, 2], [2, 3], [1, 3], [3, 4], [4, 2], [5, 6]]).paths('1', '4')
+/*
+[ [ [ '1', '2', 1 ], [ '2', '3', 1 ], [ '3', '4', 1 ] ],
+  [ [ '1', '3', 1 ], [ '3', '4', 1 ] ] ]
+*/
 ```
 
 #### 問82: 閉路（ある頂点から始まってある頂点へ帰るまでの経路）を見つける`cycle`関数を実装せよ。
 
 ```js
-new Graph([[1, 2], [2, 3], [1, 3], [3, 4], [4, 2], [5, 6]]).cycle(2)
-// [ [ 2, 3, 4, 2 ] ]
+new Graph([[1, 2], [2, 3], [1, 3], [3, 4], [4, 2], [5, 6]]).cycle('2')
+// [ [ [ '2', '3', 1 ], [ '3', '4', 1 ], [ '4', '2', 1 ] ] ]
 ```
 
-#### 問83: 全ての[スパニングツリー](https://ja.wikipedia.org/wiki/%E5%85%A8%E5%9F%9F%E6%9C%A8)を構築する`spanningTree`関数を実装せよ。
+#### 問83: グラフから[スパニングツリー](https://ja.wikipedia.org/wiki/%E5%85%A8%E5%9F%9F%E6%9C%A8)を全て探す`spanningTrees`関数を実装せよ。
 
-#### 問84: 最小スパニングツリーを[Prim法](https://ja.wikipedia.org/wiki/%E3%83%97%E3%83%AA%E3%83%A0%E6%B3%95)で構築する`prim`関数を実装せよ。
+```js
+const trees = new Graph([['a', 'b'], ['b', 'c'], ['c', 'd'], ['d', 'a'], ['a', 'c'], ['b', 'd']]).spanningTrees
+trees[0]
+/*
+Graph {
+  a: { from: {}, to: { b: 1, c: 1 } },
+  b: { from: { a: 1 }, to: { d: 1 } },
+  c: { from: { a: 1 }, to: {} },
+  d: { from: { b: 1 }, to: {} } }
+*/
+trees.length // 16
+```
 
-#### 問85: 二つのグラフが[グラフ同型](https://ja.wikipedia.org/wiki/%E3%82%B0%E3%83%A9%E3%83%95%E5%90%8C%E5%9E%8B)であるかを返す`iso`関数を実装せよ。
+#### 問84: 最小スパニングツリー(MST)を[Prim法](https://ja.wikipedia.org/wiki/%E3%83%97%E3%83%AA%E3%83%A0%E6%B3%95)で全て探す`prim`関数を実装せよ。
+
+```js
+new Graph([[1, 2, 12], [1, 3, 34], [1, 5, 78], [2, 4, 55], [2, 5, 32], [3, 4, 61], [3, 5, 44], [4, 5, 93]]).prim
+/*
+[ Graph {
+    '1': { from: {}, to: { '2': 12, '3': 34 } },
+    '2': { from: { '1': 12 }, to: { '4': 55, '5': 32 } },
+    '3': { from: { '1': 34 }, to: {} },
+    '4': { from: { '2': 55 }, to: {} },
+    '5': { from: { '2': 32 }, to: {} } } ]
+*/
+```
+
+#### 問85: 二つのグラフが[グラフ同型](https://ja.wikipedia.org/wiki/%E3%82%B0%E3%83%A9%E3%83%95%E5%90%8C%E5%9E%8B)であるかを返す`isomorphism`関数を実装せよ。
 
 #### 問86: [Welsh-Powellの頂点彩色アルゴリズム](https://ja.wikipedia.org/wiki/%E3%82%B0%E3%83%A9%E3%83%95%E5%BD%A9%E8%89%B2#%E8%B2%AA%E6%AC%B2%E5%BD%A9%E8%89%B2)を使用して、隣接ノードが異なる色になるように彩色する`paint`関数を実装せよ。
 
@@ -3067,39 +3096,39 @@ new MultiwayTree(['a', ['f', 'g'], 'c', ['b', 'd', 'e']]).lisp
 
 頂点のリストと、辺（`[from, to, cost]`）のリストを渡すと、図のようなラベル付きグラフを構築できるようにします。  
 また、辺のリストのみ渡された場合でもグラフを構築できるようにします。  
-各辺はコストを持ちます。`cost`が渡されなかった場合は`Infinity`にします。
+各辺はコストを持ちます。`cost`が渡されなかった場合は`1`などのデフォルト値にします。
 
-どの頂点からでも、隣接する頂点が分かるようにしておきましょう。
+クラスの設計は今後の問題が解きやすいようにしてください。  
+この結果通りのインスタンスが生成されなくても構いません。
 
 ```js
 class Graph {
 
-  constructor(nodes, edges = null) {
+  constructor(nodes = [], edges = null) {
     if (edges) { 
-      nodes.forEach(label => this[label] = { from: [], to: [] })
+      nodes.forEach(label => this[label] = { from: {}, to: {} })
       edges.forEach(edge => this.connect(...edge))
 
     } else nodes.forEach(e => {
       if (!Array.isArray(e)) { 
-        this[e] = { from: [], to: [] }
+        this[e] = { from: {}, to: {} }
 
       } else {
         let [from, to, cost] = e
-        cost = cost || Infinity
-        
-        if (!this[from]) { this[from] = { from: [], to: [] } }
-        if (!this[to]) { this[to] = { from: [], to: [] } }
-        
-        this[from].to.push([to, cost])
-        this[to].from.push([from, cost])
+        cost = cost || 1
+        this.connect(from, to, cost, true)
       }
     })
   }
 
-  connect(from, to, cost = Infinity) {
-    if (!this[from] || !this[to]) throw new Error('missing node')
-    this[from].to.push([to, cost])
-    this[to].from.push([from, cost])
+  connect(from, to, cost = 1, isInsert = false) {
+    if (!isInsert && (!this[from] || !this[to])) throw new Error('missing node')
+    
+    if (!this[from]) { this[from] = { from: {}, to: {} } }
+    if (!this[to]) { this[to] = { from: {}, to: {} } }
+
+    this[from].to[to] = cost
+    this[to].from[from] = cost
   }
 }
 
@@ -3107,47 +3136,48 @@ new Graph(['b', 'c', 'd', 'f', 'g', 'h', 'k'], [['b', 'c', 1], ['b', 'f', 2], ['
 // new Graph([['b', 'c', 1], ['b', 'f', 2], ['c', 'f', 5], ['f', 'k', 3], ['g', 'h'], 'd'])
 /*
 Graph {
-  b: { from: [], to: [ [ 'c', 1 ], [ 'f', 2 ] ] },
-  c: { from: [ [ 'b', 1 ] ], to: [ [ 'f', 5 ] ] },
-  d: { from: [], to: [] },
-  f: { from: [ [ 'b', 2 ], [ 'c', 5 ] ], to: [ [ 'k', 3 ] ] },
-  g: { from: [], to: [ [ 'h', Infinity ] ] },
-  h: { from: [ [ 'g', Infinity ] ], to: [] },
-  k: { from: [ [ 'f', 3 ] ], to: [] } }
+  b: { from: {}, to: { c: 1, f: 2 } },
+  c: { from: { b: 1 }, to: { f: 5 } },
+  d: { from: {}, to: {} },
+  f: { from: { b: 2, c: 5 }, to: { k: 3 } },
+  g: { from: {}, to: { h: 1 } },
+  h: { from: { g: 1 }, to: {} },
+  k: { from: { f: 3 }, to: {} } }
 */
 ```
 
-頂点のラベルをプロパティ名にします。プロパティを持っていない場合は、`{ from: [], to: [] }`を持たせます。  
-この`from`と`to`には`[ラベル, コスト]`のペアが格納され、行きと帰りの経路をコストを見て選択して辿ることができるようになっています。
+頂点のラベルをプロパティ名にします。プロパティを持っていない場合は、`{ from: {}, to: {} }`を持たせます。  
+この`from`と`to`には`ラベル: コスト`のプロパティが格納され、行きと帰りの経路をコストを見て選択して辿ることができるようになっています。
 
 コンストラクタは引数が二つある場合と一つのみの場合で分岐させます。  
 頂点のリストがある場合は、辺は既に存在する頂点同士を結ばなければなりません。  
 そのため`connect`関数を定義し、頂点が存在していない場合はエラーを投げるようにしています。
 
-辺のリストのみ渡された場合は、最初の一回目の参照時はプロパティが定義されていないため気をつけます。
+辺のリストのみ渡された場合は、最初の一回目の参照時はプロパティが定義されていないため定義します。
+
+`console.log`などで中身を見たときの結果を気にしないのであれば、辺のリストをインスタンス生成時に保持しておくと色々楽かもしれません。
 
 #### 問81: ある頂点から別の頂点までの経路を返す`paths`関数を実装せよ。
 
 ```js
 class Graph {
   /* 省略 */
-  paths(from, to, already = []) {
-    const targets = this[from].to
+  paths(from, to, already = new Set()) {
+    const target = this[from].to
+    const keys = Object.keys(target)
 
-    if (targets.length === 0 || already.find(e => e === from)) return []
-    if (targets.find(([e,]) => e === to)) return [[from, to]]
-    
-    return targets
-      .map(([e,]) => {
-        const result = this.paths(e, to, already.concat(from))
-        return result.length ? [from].concat(...result) : []
-      })
-      .filter(e => e.length)
+    if (keys.length === 0 || already.has(from)) return []
+    if (target[to]) return [[[from, to, target[to]]]]
+
+    return keys.flatMap(key => this.paths(key, to, new Set([...already, from])).map(e => [[from, key, target[key]], ...e]))
   }
 }
 
-new Graph([[1, 2], [2, 3], [1, 3], [3, 4], [4, 2], [5, 6]]).paths(1, 4)
-// [ [ 1, 2, 3, 4 ], [ 1, 3, 4 ] ]
+new Graph([[1, 2], [2, 3], [1, 3], [3, 4], [4, 2], [5, 6]]).paths('1', '4')
+/*
+[ [ [ '1', '2', 1 ], [ '2', '3', 1 ], [ '3', '4', 1 ] ],
+  [ [ '1', '3', 1 ], [ '3', '4', 1 ] ] ]
+*/
 ```
 
 何も見つからなかった場合は空の配列を返します。  
@@ -3155,9 +3185,9 @@ new Graph([[1, 2], [2, 3], [1, 3], [3, 4], [4, 2], [5, 6]]).paths(1, 4)
 `already`に`from`が含まれているなら辿ったことがあるため空の配列を返します。これで閉路による無限ループを防げます。
 
 `this[from].to`には今見ている頂点と、行先の別の頂点間の経路が格納されています。  
-つまり、この配列に目的の頂点のラベル`to`が含まれているなら、`[[from, to]]`を返してもよいことになります。
+つまり、このオブジェクトが目的の頂点のラベル`to`をプロパティ名とするプロパティを持つなら、`[[from, to, cost]]`を返してもよいことになります。
 
-含まれていない場合、`this[from].to`に格納されているラベル全てに`paths`関数を適用しましょう。  
+含まれていない場合、`this[from].to`が持つラベル全てに`paths`関数を適用しましょう。  
 `from`には、移動先の頂点のラベルを渡します。`to`は変わらないのでそのまま渡します。  
 `already`には、`already`と`from`を結合して渡します。  
 経路が見つからなかった場合は空の配列が返ってきているため、最後にフィルタして返します。
@@ -3172,8 +3202,134 @@ class Graph {
   }
 }
 
-new Graph([[1, 2], [2, 3], [1, 3], [3, 4], [4, 2], [5, 6]]).cycle(2)
-// [ [ 2, 3, 4, 2 ] ]
+new Graph([[1, 2], [2, 3], [1, 3], [3, 4], [4, 2], [5, 6]]).cycle('2')
+// [ [ [ '2', '3', 1 ], [ '3', '4', 1 ], [ '4', '2', 1 ] ] ]
 ```
 
 `paths`関数の`from`と`to`を同じ頂点のラベルにして呼び出します。
+
+#### 問83: グラフから[スパニングツリー](https://ja.wikipedia.org/wiki/%E5%85%A8%E5%9F%9F%E6%9C%A8)を全て探す`spanningTrees`関数を実装せよ。
+
+```js
+import { combinations } from './array' // 問26で実装した組み合わせ関数
+
+class Graph {
+  /* 省略 */
+  get edges() {
+    return Object.keys(this).flatMap(from => {
+      const target = this[from].to
+      const edges = []
+
+      for (const to in target) {
+        edges.push([from, to, target[to]])
+      }
+      return edges
+    })
+  }
+
+  get spanningTrees() {
+    const keys = Object.keys(this)
+    const { edges } = this
+    if (!keys.length || edges.length < keys.length - 1) return []
+
+    return combinations(edges, keys.length - 1)
+      .filter(x => {
+        for (const key of keys) {
+          let find = false
+
+          for (const [from, to,] of x) if (key === from || key === to) {
+            find = true
+            break
+          }
+          if (!find) return false
+        }
+        return true
+      })
+      .map(e => new Graph(e))
+  }
+
+const trees = new Graph([['a', 'b'], ['b', 'c'], ['c', 'd'], ['d', 'a'], ['a', 'c'], ['b', 'd']]).spanningTrees
+trees[0]
+/*
+Graph {
+  a: { from: {}, to: { b: 1, c: 1 } },
+  b: { from: { a: 1 }, to: { d: 1 } },
+  c: { from: { a: 1 }, to: {} },
+  d: { from: { b: 1 }, to: {} } }
+*/
+trees.length // 16
+```
+
+#### 問84: 最小スパニングツリー(MST)を[Prim法](https://ja.wikipedia.org/wiki/%E3%83%97%E3%83%AA%E3%83%A0%E6%B3%95)で全て探す`prim`関数を実装せよ。
+
+```js
+import { uniqWith, isEqual } from 'lodash'
+
+class Graph {
+  /* 省略 */
+  copy(edge = null) {
+    const graph = new Graph(Object.keys(this), this.edges)
+    if (edge) { graph.connect(...edge, true) }
+    return graph
+  }
+
+  get prim() {
+    const keys = Object.keys(this)
+    const { edges } = this
+    if (!keys.length || edges.length < keys.length - 1) return []
+
+    /**
+     * 次の頂点へ行くために最小コストの辺を探す
+     * @param {Graph} graph 調べるグラフ
+     * @returns {[string, string, number][]} 最小コストの辺のリスト
+     */
+    const min = (graph) => {
+      const labels = Object.keys(graph)
+      const result = []
+
+      labels.forEach(e => {
+        const { from, to } = this[e]
+        const fromEdges = Object.keys(from).filter(k => !labels.includes(k)).map(k => [k, e, from[k]])
+        if (fromEdges.length) { result.push(...fromEdges) }
+        
+        const toEdges = Object.keys(to).filter(k => !labels.includes(k)).map(k => [e, k, to[k]])
+        if (toEdges.length) { result.push(...toEdges) }
+      })
+
+      return result.sort(([,,a], [,,b]) => a - b).filter(([,,cost], _, self) => cost <= self[0][2])
+    }
+
+    /**
+     * MSTを探す
+     * @param {Graph} graph 調べるグラフ
+     * @returns {Graph[]} MSTのリスト
+     */
+    const search = (graph) => {
+      const edges = min(graph)
+      return edges.length ? edges.flatMap(e => search(graph.copy(e))) : [graph]
+    }
+    
+    // 探した後、全ての頂点が含まれているかどうか調べる
+    const result = search(new Graph([keys[0]]))
+      .filter(x => {        
+        for (const key of keys) if (!x[key]) return false
+        return true
+      })
+
+    return uniqWith(result, isEqual)
+  }
+}
+
+new Graph([[1, 2, 12], [1, 3, 34], [1, 5, 78], [2, 4, 55], [2, 5, 32], [3, 4, 61], [3, 5, 44], [4, 5, 93]]).prim
+/*
+[ Graph {
+    '1': { from: {}, to: { '2': 12, '3': 34 } },
+    '2': { from: { '1': 12 }, to: { '4': 55, '5': 32 } },
+    '3': { from: { '1': 34 }, to: {} },
+    '4': { from: { '2': 55 }, to: {} },
+    '5': { from: { '2': 32 }, to: {} } } ]
+*/
+```
+
+~~えいニャ！えいニャ！渚の小悪魔☆~~  
+
