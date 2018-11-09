@@ -1,4 +1,4 @@
-import { combinations } from './array'
+import { combinations, permutations } from './array'
 import { uniqWith, isEqual } from 'lodash'
 
 /**
@@ -181,5 +181,31 @@ export default class Graph {
       })
 
     return uniqWith(result, isEqual)
+  }
+
+  /**
+   * グラフ同士が同型かどうかを比較して対応表を返す
+   * @param {Graph} graph 比較するグラフ
+   * @returns {boolean} 同型ならこのグラフを与えたグラフに変換する対応表　同型でなければnull 
+   */
+  isomorphism(graph) {
+    const xKeys = Object.keys(this)
+    const { edges: xEdges } = this
+
+    const yKeys = Object.keys(graph)
+    const yEdges = graph.edges.map(([from, to,]) => [from, to])
+
+    if (xKeys.length !== yKeys.length) return null
+    if (xEdges.length !== yEdges.length) return null
+
+    for (const perm of permutations(yKeys)) {
+      const table = {}
+      perm.forEach((e, i) => table[xKeys[i]] = e)
+      const edges = xEdges.map(([from, to,]) => [table[from], table[to]])
+
+      const result = yEdges.every(x => edges.some(y => isEqual(x, y)))
+      if (result) return table
+    }
+    return null
   }
 }

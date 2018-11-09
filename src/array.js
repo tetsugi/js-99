@@ -398,3 +398,15 @@ export const lfsort = list => {
   const map = new Map(encode(list.map(e => e.length).sort()).map(([value, key]) => [key, value]))
   return list.sort((a, b) => map.get(a.length) - map.get(b.length))
 }
+
+
+/**
+ * 全ての要素を使った順列を返す
+ * @param {any[]} list 順列を求めるリスト
+ * @returns {any[][]} 全ての要素を使った順列
+ */
+export const permutations = list => {
+  if (list.length < 1) return []
+  if (list.length === 1) return [list]
+  return list.flatMap((elem, i) => permutations(list.filter((_, j) => i !== j)).map(e => [elem, ...e]))
+}

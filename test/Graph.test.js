@@ -1,5 +1,5 @@
 import Graph from '../src/Graph'
-import {combinations} from '../src/array'
+import {combinations, permutations} from '../src/array'
 import {isEqual} from 'lodash'
 
 
@@ -21,6 +21,7 @@ describe('', () => {
   })
   */
 
+  /*
   test('', () => {
     //const graph = new Graph([['a', 'b'], ['c', 'd']])
     //const graph = new Graph([['a', 'b'], ['a', 'c'], ['b', 'c']])
@@ -30,6 +31,7 @@ describe('', () => {
     //console.log(graph.spanningTrees)
     console.log(graph.prim)
   })
+  */
 
   test('', () => {
     const graph1 = new Graph([1, 2, 3, 4, 5, 6, 7, 8], [[1, 5], [1, 6], [1, 7], [2, 5], [2, 6], [2, 8], [3, 5], [3, 7], [3, 8], [4, 6], [4, 7], [4, 8]])
@@ -37,5 +39,6 @@ describe('', () => {
 
     console.log(graph1)
     console.log(graph2)
+    console.log(graph1.isomorphism(graph2))
   })
 })
