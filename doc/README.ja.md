@@ -1150,11 +1150,23 @@ graph1.isomorphism(graph2)
 
 頂点を次数が小さくなる順序でソートした後、貪欲彩色を行います。
 
+```js
+const graph = new Graph(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'], [['a', 'b'], ['a', 'e'], ['a', 'f'], ['b', 'c'], ['b', 'g'], ['c', 'd'], ['c', 'h'], ['d', 'e'], ['d', 'i'], ['e', 'j'], ['f', 'h'], ['f', 'i'], ['g', 'i'], ['g', 'j'], ['h', 'j']])
+graph.paint()
+// { a: 1, b: 2, c: 1, d: 2, e: 3, f: 2, g: 1, h: 3, i: 3, j: 2 }
+```
+
 #### 問87: 深さを優先してグラフを探索する`depthFirst`関数を実装せよ。
+
+```js
+const graph = new Graph([1, 2, 3, 4, 5, 6, 7], [[1, 2], [2, 3], [1, 4], [3, 4], [5, 2], [5, 4], [6, 7]])
+console.log(graph.depthFirst('1'))
+// [ '1', '2', '3', '4', '5' ]
+```
 
 #### 問88: グラフを連結しているもので分離する`connectedComponents`関数を実装せよ。
 
-#### 問89: グラフが[2部グラフ](https://ja.wikipedia.org/wiki/2%E9%83%A8%E3%82%B0%E3%83%A9%E3%83%95)かどうかを返す`isBipartite`関数を実装せよ。
+#### 問89: グラフが[2部グラフ](https://ja.wikipedia.org/wiki/2%E9%83%A8%E3%82%B0%E3%83%A9%E3%83%95)かどうかを返す`bipartite`関数を実装せよ。
 
 
 ### 問90～94: その他の問題
@@ -3438,3 +3450,79 @@ graph1.isomorphism(graph2)
 この`isomorphism`関数のオーダーは頂点数を`n`とすると`O(n!)`です。  
 これは巡回セールスマン問題の全探索による解法と同程度遅いアルゴリズムであることを意味しています。  
 グラフ同型問題は準多項式時間で解けるらしいので、そのアルゴリズムで実装できればかなり高速化することができます。  
+
+#### 問86: [Welsh-Powellの頂点彩色アルゴリズム](https://ja.wikipedia.org/wiki/%E3%82%B0%E3%83%A9%E3%83%95%E5%BD%A9%E8%89%B2#%E8%B2%AA%E6%AC%B2%E5%BD%A9%E8%89%B2)を使用して、隣接ノードが異なる色になるように彩色する`paint`関数を実装せよ。
+
+頂点を次数が小さくなる順序でソートした後、貪欲彩色を行います。
+
+```js
+class Graph {
+  /* 省略 */
+  paint() {
+    const result = {}
+
+    const degree = key => {
+      const { from, to } = this[key]
+      return Object.keys(from).length + Object.keys(to).length
+    }
+    
+    const keys = Object.keys(this).sort((a, b) => degree(a) - degree(b))
+
+    keys.forEach(key => {
+      const { from, to } = this[key]
+      let color = 1
+
+      const neighbors = [...Object.keys(from), ...Object.keys(to)]
+        .filter((e, i, self) => self.indexOf(e) === i)
+        .map(e => result[e])
+      
+      while (neighbors.includes(color)) { color++ }
+
+      result[key] = color
+    })
+
+    return result
+  }
+}
+
+const graph = new Graph(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'], [['a', 'b'], ['a', 'e'], ['a', 'f'], ['b', 'c'], ['b', 'g'], ['c', 'd'], ['c', 'h'], ['d', 'e'], ['d', 'i'], ['e', 'j'], ['f', 'h'], ['f', 'i'], ['g', 'i'], ['g', 'j'], ['h', 'j']])
+graph.paint()
+// { a: 1, b: 2, c: 1, d: 2, e: 3, f: 2, g: 1, h: 3, i: 3, j: 2 }
+```
+
+次数は`from`と`to`が持つプロパティの数と等しいことになります。  
+グラフが持つ頂点のラベルを次数の昇順でソートします。  
+着色する際は近隣の頂点と同じ色になってはいけないので、近隣の着色済みの頂点の色と同じだったらインクリメントすることでズラします。
+
+#### 問87: 深さを優先してグラフを探索する`depthFirst`関数を実装せよ。
+
+```js
+class Graph {
+  /* 省略 */
+  depthFirst(start) {
+    const visited = []
+
+    const f = label => {
+      visited.push(label)
+      
+      const { from, to } = this[label]
+      const keysForEach = obj => Object.keys(obj).forEach(key => {
+        if (!visited.includes(key)) { f(key) }
+      })
+
+      keysForEach(to)
+      keysForEach(from)
+    }
+    f(start)
+    
+    return visited
+  }
+}
+
+const graph = new Graph([1, 2, 3, 4, 5, 6, 7], [[1, 2], [2, 3], [1, 4], [3, 4], [5, 2], [5, 4], [6, 7]])
+console.log(graph.depthFirst('1'))
+// [ '1', '2', '3', '4', '5' ]
+```
+
+探索し終わった頂点については配列に格納します。  
+指定された頂点について`to`、`from`の順に繋がっている未探索の頂点を探索していきます。  

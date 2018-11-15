@@ -208,4 +208,66 @@ export default class Graph {
     }
     return null
   }
+
+  /**
+   * Welsh-Powellの頂点彩色アルゴリズムで彩色する
+   * @returns {any} 彩色後のノードと対応する数字の対応表
+   */
+  paint() {
+    const result = {}
+
+    const degree = key => {
+      const { from, to } = this[key]
+      return Object.keys(from).length + Object.keys(to).length
+    }
+
+    const keys = Object.keys(this).sort((a, b) => degree(a) - degree(b))
+
+    keys.forEach(key => {
+      const { from, to } = this[key]
+      let color = 1
+
+      const neighbors = [...Object.keys(from), ...Object.keys(to)]
+        .filter((e, i, self) => self.indexOf(e) === i)
+        .map(e => result[e])
+      
+      while (neighbors.includes(color)) { color++ }
+
+      result[key] = color
+    })
+
+    return result
+  }
+
+  /**
+   * 深さ優先探索でグラフを探索する
+   * @param {string} start 開始する頂点のラベル
+   * @returns {string[]} ラベルのリスト
+   */
+  depthFirst(start) {
+    const visited = []
+
+    const f = label => {
+      visited.push(label)
+
+      const { from, to } = this[label]
+      const keysForEach = obj => Object.keys(obj).forEach(key => {
+        if (!visited.includes(key)) { f(key) }
+      })
+
+      keysForEach(to)
+      keysForEach(from)
+    }
+    f(start)
+    
+    return visited
+  }
+
+  get connectedComponents() {
+    /* depthFirstの結果をセットにする。残りの部分についても同様の処理を繰り返す */
+  }
+
+  get bipartite() {
+    
+  }
 }
