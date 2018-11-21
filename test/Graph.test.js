@@ -52,7 +52,9 @@ describe('', () => {
   */
 
   test('', () => {
-    const graph = new Graph([1, 2, 3, 4, 5, 6, 7], [[1, 2], [2, 3], [1, 4], [3, 4], [5, 2], [5, 4], [6, 7]])
-    console.log(graph.depthFirst('1'))
+    const graph = new Graph([1, 2, 3, 4, 5], [[1, 2], [2, 3], [1, 4], [3, 4], [5, 2], [5, 4]])
+    //console.log(graph.depthFirst('1'))
+    //console.log(graph.connectedComponents)
+    console.log(graph.bipartite)
   })
 })

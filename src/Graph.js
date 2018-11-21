@@ -242,7 +242,7 @@ export default class Graph {
   /**
    * 深さ優先探索でグラフを探索する
    * @param {string} start 開始する頂点のラベル
-   * @returns {string[]} ラベルのリスト
+   * @returns {string[]} 頂点のラベルのリスト
    */
   depthFirst(start) {
     const visited = []
@@ -263,11 +263,61 @@ export default class Graph {
     return visited
   }
 
+  /**
+   * グラフを連結している頂点で分離する
+   * @returns {string[][]} 繋がっている頂点のラベルのリスト
+   */
   get connectedComponents() {
-    /* depthFirstの結果をセットにする。残りの部分についても同様の処理を繰り返す */
+    const keys = Object.keys(this)
+    const set = new Set()
+    const result = []
+
+    keys.forEach(key => {
+      if (set.has(key)) return
+      
+      const connected = this.depthFirst(key)
+      connected.forEach(e => set.add(e))
+      result.push(connected)
+    })
+    return result
   }
 
+  /**
+   * グラフが2部グラフであれば頂点をグループ分けする
+   * @returns {string[][]} グループ分けされた頂点のラベルのリスト
+   */
   get bipartite() {
-    
+    const keys = Object.keys(this)
+    if (keys.length < 2) return null
+
+    const colors = {}
+
+    const paint = (key, color) => {
+      colors[key] = color
+      const { from, to } = this[key]
+
+      for (const k of Object.keys(to)) {
+        if (colors[k] === color) return false
+        if (!colors[k] && !paint(k, -color)) return false
+      }
+
+      for (const k of Object.keys(from)) {
+        if (colors[k] === color) return false
+        if (!colors[k] && !paint(k, -color)) return false
+      }
+
+      return true
+    }
+
+    const key = keys[0]
+    if (!paint(key, 1)) return null
+
+    const painted = Object.keys(colors)
+    if (keys.length !== painted.length) return null 
+
+    const result = [[], []]
+    painted.forEach(k => result[colors[k] === 1 ? 0 : 1].push(k))
+
+    return result
   }
 }

@@ -1160,14 +1160,28 @@ graph.paint()
 
 ```js
 const graph = new Graph([1, 2, 3, 4, 5, 6, 7], [[1, 2], [2, 3], [1, 4], [3, 4], [5, 2], [5, 4], [6, 7]])
-console.log(graph.depthFirst('1'))
+graph.depthFirst('1')
 // [ '1', '2', '3', '4', '5' ]
 ```
 
-#### 問88: グラフを連結しているもので分離する`connectedComponents`関数を実装せよ。
+#### 問88: グラフを連結している頂点で分離する`connectedComponents`関数を実装せよ。
+
+```js
+const graph = new Graph([1, 2, 3, 4, 5, 6, 7], [[1, 2], [2, 3], [1, 4], [3, 4], [5, 2], [5, 4], [6, 7]])
+graph.connectedComponents
+// [ [ '1', '2', '3', '4', '5' ], [ '6', '7' ] ]
+```
 
 #### 問89: グラフが[2部グラフ](https://ja.wikipedia.org/wiki/2%E9%83%A8%E3%82%B0%E3%83%A9%E3%83%95)かどうかを返す`bipartite`関数を実装せよ。
 
+2部グラフだった場合、頂点を二つのグループに分けてみましょう。
+
+```js
+const graph1 = new Graph([1, 2, 3, 4, 5], [[1, 2], [2, 3], [1, 4], [3, 4], [5, 2], [5, 4]])
+const graph2 = new Graph([1, 2, 3, 4, 5], [[1, 2], [2, 3], [1, 4], [3, 4], [5, 2], [5, 4], [1, 3]])
+graph1.bipartite // [ [ '1', '3', '5' ], [ '2', '4' ] ]
+graph2.bipartite // null
+```
 
 ### 問90～94: その他の問題
 
@@ -3526,3 +3540,87 @@ console.log(graph.depthFirst('1'))
 
 探索し終わった頂点については配列に格納します。  
 指定された頂点について`to`、`from`の順に繋がっている未探索の頂点を探索していきます。  
+
+#### 問88: グラフを連結している頂点で分離する`connectedComponents`関数を実装せよ。
+
+```js
+class Graph {
+  /* 省略 */
+  get connectedComponents() {
+    const keys = Object.keys(this)
+    const set = new Set()
+    const result = []
+
+    keys.forEach(key => {
+      if (set.has(key)) return
+      
+      const connected = this.depthFirst(key)
+      connected.forEach(e => set.add(e))
+      result.push(connected)
+    })
+    return result
+  }
+}
+
+const graph = new Graph([1, 2, 3, 4, 5, 6, 7], [[1, 2], [2, 3], [1, 4], [3, 4], [5, 2], [5, 4], [6, 7]])
+console.log(graph.connectedComponents)
+// [ [ '1', '2', '3', '4', '5' ], [ '6', '7' ] ]
+```
+
+`depthFirst`関数を実装したことで、ある頂点から繋がっている頂点を辿ることができるようになりました。  
+`connectedComponents`関数は辿ったことがない頂点に対して`depthFirst`関数を適用することで、グラフの頂点を繋がっているもの同士で分離します。
+
+#### 問89: グラフが[2部グラフ](https://ja.wikipedia.org/wiki/2%E9%83%A8%E3%82%B0%E3%83%A9%E3%83%95)かどうかを返す`bipartite`関数を実装せよ。
+
+2部グラフだった場合、頂点を二つのグループに分けてみましょう。
+
+```js
+class Graph {
+  /* 省略 */
+  get bipartite() {
+    const keys = Object.keys(this)
+    if (keys.length < 2) return null
+
+    const colors = {}
+
+    const paint = (key, color) => {
+      colors[key] = color
+      const { from, to } = this[key]
+
+      for (const k of Object.keys(to)) {
+        if (colors[k] === color) return false
+        if (!colors[k] && !paint(k, -color)) return false
+      }
+
+      for (const k of Object.keys(from)) {
+        if (colors[k] === color) return false
+        if (!colors[k] && !paint(k, -color)) return false
+      }
+
+      return true
+    }
+
+    const key = keys[0]
+    if (!paint(key, 1)) return null
+
+    const painted = Object.keys(colors)
+    if (keys.length !== painted.length) return null 
+
+    const result = [[], []]
+    painted.forEach(k => result[colors[k] === 1 ? 0 : 1].push(k))
+
+    return result
+  }
+}
+
+const graph1 = new Graph([1, 2, 3, 4, 5], [[1, 2], [2, 3], [1, 4], [3, 4], [5, 2], [5, 4]])
+const graph2 = new Graph([1, 2, 3, 4, 5], [[1, 2], [2, 3], [1, 4], [3, 4], [5, 2], [5, 4], [1, 3]])
+graph1.bipartite // [ [ '1', '3', '5' ], [ '2', '4' ] ]
+graph2.bipartite // null
+```
+
+2部グラフは2色で彩色することが可能です。  
+つまり、各頂点を2色を切り替えながら塗り、隣接する頂点の色と被らなければ2部グラフだと言えます。  
+色が被っていたり、頂点同士が繋がっていない場合は`null`を返すようにします。  
+解答例では`paint`関数を呼ぶと頂点と色の対応表が生成されるので、それを基に結果の配列を生成しています。
+

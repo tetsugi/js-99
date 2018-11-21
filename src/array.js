@@ -265,10 +265,10 @@ export const range = (start, end) => {
 }
 
 /**
- * 
- * @param {any[]|string} list 
- * @param {number} n
- * @returns {any[]|string} 
+ * 配列や文字列から指定された数ぶんだけランダムに要素を取り出す
+ * @param {any[]|string} list リスト
+ * @param {number} n 選ぶ個数
+ * @returns {any[]|string} 選ばれた要素
  */
 export const rndSelect = (list, n) => {
   const isStr = typeof(list) === 'string'
@@ -284,7 +284,7 @@ export const rndSelect = (list, n) => {
 }
 
 /**
- * 
+ * 乱数列を得る
  * @param {number} length 長さ
  * @param {number} max 最大値
  * @returns {number[]}
@@ -300,8 +300,9 @@ export const diffSelect = (length, max) => {
 }
 
 /**
- * 
- * @param {any[]|string} list 
+ * 配列や文字列をランダムに並び替える
+ * @param {any[]|string} list 並び替える配列
+ * @returns {any[]|string} 並び替えた配列
  */
 export const rndPermu = list => rndSelect(list, list.length)
 
