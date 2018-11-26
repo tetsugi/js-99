@@ -400,14 +400,17 @@ export const lfsort = list => {
   return list.sort((a, b) => map.get(a.length) - map.get(b.length))
 }
 
-
 /**
  * 全ての要素を使った順列を返す
  * @param {any[]} list 順列を求めるリスト
- * @returns {any[][]} 全ての要素を使った順列
+ * @param {number} n 選ぶ要素数
+ * @returns {IterableIterator<any[]>} 全ての要素を使った順列
  */
-export const permutations = list => {
-  if (list.length < 1) return []
-  if (list.length === 1) return [list]
-  return list.flatMap((elem, i) => permutations(list.filter((_, j) => i !== j)).map(e => [elem, ...e]))
+export function* permutations(list, n = list.length) {
+  if (n <= 1) yield list.slice()
+  else for (let i = 0; i < n; i++) {
+    yield* permutations(list, n - 1)
+    const j = n % 2 ? 0 : i;
+    [list[n - 1], list[j]] = [list[j], list[n - 1]]
+  }
 }

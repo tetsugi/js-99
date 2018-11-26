@@ -21,17 +21,15 @@ describe('', () => {
   })
   */
 
-  /*
   test('', () => {
     //const graph = new Graph([['a', 'b'], ['c', 'd']])
     //const graph = new Graph([['a', 'b'], ['a', 'c'], ['b', 'c']])
     //const graph = new Graph([['a', 'b'], ['b', 'c'], ['c', 'a'], ['a', 'd']])
     //const graph = new Graph([['a', 'b'], ['b', 'c'], ['c', 'd'], ['d', 'a'], ['a', 'c'], ['b', 'd']])
-    const graph = new Graph([[1, 2, 12], [1, 3, 34], [1, 5, 78], [2, 4, 55], [2, 5, 32], [3, 4, 61], [3, 5, 44], [4, 5, 93]])
+    //const graph = new Graph([[1, 2, 12], [1, 3, 34], [1, 5, 78], [2, 4, 55], [2, 5, 32], [3, 4, 61], [3, 5, 44], [4, 5, 93]])
     //console.log(graph.spanningTrees)
-    console.log(graph.prim)
+    //console.log(graph.prim)
   })
-  */
 
   /*
   test('', () => {
@@ -51,10 +49,13 @@ describe('', () => {
   })
   */
 
+  /*
   test('', () => {
     const graph = new Graph([1, 2, 3, 4, 5], [[1, 2], [2, 3], [1, 4], [3, 4], [5, 2], [5, 4]])
     //console.log(graph.depthFirst('1'))
     //console.log(graph.connectedComponents)
     console.log(graph.bipartite)
   })
+  */
+ test('', () => {})
 })

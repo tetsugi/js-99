@@ -4,6 +4,7 @@ import * as codes from './codes'
 import BinaryTree from './BinaryTree'
 import MultiwayTree from './MultiwayTree'
 import Graph from './Graph'
+import * as miscellaneous from './miscellaneous'
 
 export default {
   array,
@@ -11,5 +12,6 @@ export default {
   codes,
   BinaryTree,
   MultiwayTree,
-  Graph
+  Graph,
+  miscellaneous
 }
