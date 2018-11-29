@@ -320,4 +320,14 @@ export default class Graph {
 
     return result
   }
+
+  /**
+   * ある頂点の次数を返す
+   * @param {string} label 頂点のラベル
+   * @returns {number} 次数
+   */
+  degree(label) {
+    const {from, to} = this[label]
+    return Object.keys(from).length + Object.keys(to).length
+  }
 }

@@ -1,4 +1,7 @@
-import { permutations, range } from './array'
+import { isEqual, cloneDeep, findIndex } from 'lodash'
+
+import { permutations, range, combinations, lfsort } from './array'
+import Graph from './Graph'
 
 /**
  * Nクイーン問題を解く
@@ -58,10 +61,7 @@ export function* queens(size = 8) {
    * @returns {IterableIterator<number[]>} 確定したクイーンの位置
    */
   function* generate(row = 0, queens = []) {
-    if (row === size) {
-      yield queens.map(e => e + 1)
-      return
-    }
+    if (row === size) return yield queens.map(e => e + 1)
 
     for (let column = 0; column < size; column++) if (board[row][column] === 0) {
       queens[row] = column
@@ -123,8 +123,7 @@ export function* knightsTour([x, y] = [1, 1], [width, height] = [8, 8], {isClose
     route[count++] = [j, i]
 
     if (!isClosed && count === width * height) {
-      yield route.map(([x, y]) => [x + 1, y + 1])
-      return
+      return yield route.map(([x, y]) => [x + 1, y + 1])
     }
 
     board[i][j] = -1
@@ -180,8 +179,8 @@ export function* puzzle(numbers) {
 
   /**
    * 配列を指定位置で分ける
-   * @param {number[]} list 
-   * @param {number} n 
+   * @param {number[]} list 配列
+   * @param {number} n 添え字
    */
   const splitAt = (list, n) => {
     list = [...list]
@@ -189,15 +188,12 @@ export function* puzzle(numbers) {
   }
 
   /**
-   * 
-   * @param {number[]} numbers
-   * @returns {IterableIterator<[string, number, string]>}
+   * 四則演算のパターンを生成する
+   * @param {number[]} numbers 数列
+   * @returns {IterableIterator<[string, number, string]>} [数式, 数値, 演算子]
    */
   function* generate(numbers) {
-    if (numbers.length === 1) {
-      yield [numbers[0] + '', numbers[0], '_']
-      return
-    }
+    if (numbers.length === 1) return yield [numbers[0] + '', numbers[0], '_']
 
     for (const i of range(1, numbers.length - 1)) {
       const [left, right] = splitAt(numbers, i).map(e => [...generate(e)])
@@ -232,30 +228,65 @@ export function* puzzle(numbers) {
   }
 }
 
-export const regular = (n, degree) => {
+/**
+ * k-正則単純グラフを探す  
+ * なるべくグラフ同型なものを排除しているが、完全には排除しきれていない
+ * @param {number} n 頂点数
+ * @param {number} k 次数
+ * @returns {IterableIterator<Graph>} k-正則単純グラフのリスト
+ */
+export function* regular(n, k) {
+  // n * kが2で割り切れないと辺が余るのでk-正則になり得ない
+  if (n * k % 2 === 1 || n <= k || n < 0 || k < 0) return
+  
+  const labels = range(1, n)
+  const graph = new Graph(labels)
+  for (let i = 2; i < k + 2; i++) { graph.connect(1, i) }
 
+  /**
+   * 
+   * @param {Graph} graph 
+   * @param {number} target 頂点のラベル
+   * @param {number[]} rest 残りの頂点のラベル
+   */
+  function* generate(graph, target, rest) {
+    const degree = graph.degree(target)
+    const done = degree === k
+
+    if (!rest.length) { 
+      if (done) yield graph
+      return
+    }
+
+    const [, ...rs] = rest
+    if (done) { return yield* generate(graph, target + 1, rs) }
+    if (k - degree > rest.length) return
+
+    const combi = combinations(rest, k - degree)
+      .map(x => [x, x.map(y => graph.degree(y))])
+      .filter(([,x], i, self) => self.findIndex(([,y]) => isEqual(x, y)) === i)
+      .map(([e,]) => e)
+
+    for (const selections of combi) {
+      const g = graph.copy()
+      selections.forEach(selection => g.connect(target, selection))
+      yield* generate(g, target + 1, rs)
+    }
+  }
+
+  const [,, ...rest] = labels
+  yield* generate(graph, 2, rest)
 }
+
+/** 数字の英単語 */
+const numberNames = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine']
 
 /**
  * 数字を英単語に変換する
  * @param {number} number 数字
  * @returns {string} 英単語に変換された数字
  */
-export const fullWords = number => [...(number + '')].map(e => {
-  switch (e) {
-    case '0': return 'zero'
-    case '1': return 'one'
-    case '2': return 'two'
-    case '3': return 'three'
-    case '4': return 'four'
-    case '5': return 'five'
-    case '6': return 'six'
-    case '7': return 'seven'
-    case '8': return 'eight'
-    case '9': return 'nine'
-    default: return 'unknown'
-  }
-}).join('-')
+export const fullWords = number => [...(number + '')].map(e => numberNames[e]).join('-')
 
 /**
  * Adaの識別子かどうかを返す
@@ -264,6 +295,76 @@ export const fullWords = number => [...(number + '')].map(e => {
  */
 export const identifier = str => /^[a-zA-Z](-?[a-zA-Z0-9])*$/.test(str)
 
-export const crossword = filePath => {
+/**
+ * 
+ * @param {string} file クロスワードパズルの文字列表現
+ */
+export const crossword = file => {
+  let [words, puzzle] = file.split('\n\n').filter(e => e).map(x => x.split('\n').filter(x => x))
+  words = lfsort(words)
 
+  const lines = []
+
+  for (let i = 0; i < puzzle.length; i++) {
+    const row = puzzle[i]
+
+    for (let j = 0; j < row.length; j++) {
+      const char = row[j]
+      if (char !== '.') continue
+
+      // 横に繋がっているマスを探す
+      if (row[j - 1] !== '.' && row[j + 1] === '.') {
+        let count = 0
+        for (; row[j + count] === '.'; count++) {}
+        lines.push({ direction: 0, x: j, y: i, count })
+      }
+
+      // 縦に繋がっているマスを探す
+      if ((!puzzle[i - 1] || puzzle[i - 1][j] !== '.') && (puzzle[i + 1] && puzzle[i + 1][j] === '.')) {
+        let count = 0
+        for (; puzzle[i + count] && puzzle[i + count][j] === '.'; count++) {}
+        lines.push({ direction: 1, x: j, y: i, count })
+      }
+    }
+  }
+
+  if (words.length !== lines.length) return null
+
+  const attempt = (restWords = words, restLines = lines, result = [...Array(puzzle.length)].map(_ => Array(puzzle[0].length).fill(' '))) => {
+    if (!restWords.length) return result
+
+    const [w, ...ws] = restWords
+    let index = -1
+
+    outer: while ((index = findIndex(restLines, ({ count }) => w.length === count, index + 1)) !== -1) {
+      const { direction, x, y, count } = restLines[index]
+      const board = cloneDeep(result)
+
+      if (direction === 0) {
+        for (let i = 0; i < count; i++) {
+          const target = board[y][x + i]
+          if (target !== ' ' && w[i] !== target) { continue outer } 
+        }
+        for (let i = 0; i < count; i++) {
+          board[y][x + i] = w[i]
+        }
+      } else {
+        for (let i = 0; i < count; i++) {
+          const target = board[y + i][x]
+          if (target !== ' ' && w[i] !== target) { continue outer }
+        }
+        for (let i = 0; i < count; i++) {
+          board[y + i][x] = w[i]
+        }
+      }
+
+      const found = attempt(ws, restLines.filter((_, i) => i !== index), board)
+      if (found) return found
+    }
+
+    return null
+  }
+
+  const result = attempt()
+  return result ? result.map(e => e.join('')).join('\n') : null
 }
