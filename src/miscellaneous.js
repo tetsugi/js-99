@@ -244,10 +244,11 @@ export function* regular(n, k) {
   for (let i = 2; i < k + 2; i++) { graph.connect(1, i) }
 
   /**
-   * 
-   * @param {Graph} graph 
+   * k-正則グラフを探す
+   * @param {Graph} graph 操作中のグラフ
    * @param {number} target 頂点のラベル
    * @param {number[]} rest 残りの頂点のラベル
+   * @returns {IterableIterator<Graph>} k-正則グラフ
    */
   function* generate(graph, target, rest) {
     const degree = graph.degree(target)
@@ -293,15 +294,16 @@ export const fullWords = number => [...(number + '')].map(e => numberNames[e]).j
  * @param {string} str 文字列
  * @returns Adaの識別子かどうか
  */
-export const identifier = str => /^[a-zA-Z](-?[a-zA-Z0-9])*$/.test(str)
+export const identifier = str => /^[a-zA-Z](_?[a-zA-Z0-9])*$/.test(str)
 
 /**
- * 
+ * クロスワードパズルを解く
  * @param {string} file クロスワードパズルの文字列表現
+ * @returns {string} 完成したクロスワードパズル（解けなければnull）
  */
 export const crossword = file => {
-  let [words, puzzle] = file.split('\n\n').filter(e => e).map(x => x.split('\n').filter(x => x))
-  words = lfsort(words)
+  const [words, puzzle] = file.split('\n\n').filter(e => e).map(e => e.split('\n').filter(e => e))
+  lfsort(words)
 
   const lines = []
 
@@ -318,7 +320,6 @@ export const crossword = file => {
         for (; row[j + count] === '.'; count++) {}
         lines.push({ direction: 0, x: j, y: i, count })
       }
-
       // 縦に繋がっているマスを探す
       if ((!puzzle[i - 1] || puzzle[i - 1][j] !== '.') && (puzzle[i + 1] && puzzle[i + 1][j] === '.')) {
         let count = 0
@@ -330,7 +331,14 @@ export const crossword = file => {
 
   if (words.length !== lines.length) return null
 
-  const attempt = (restWords = words, restLines = lines, result = [...Array(puzzle.length)].map(_ => Array(puzzle[0].length).fill(' '))) => {
+  /**
+   * クロスワードパズルを解く
+   * @param {string[]} restWords 残りの単語
+   * @param {{ direction: number, x: number, y: number, count: number }[]} restLines 残りのマス
+   * @param {string[][]} result 結果が格納される
+   * @return {string[][]} 結果
+   */
+  const solve = (restWords = words, restLines = lines, result = [...Array(puzzle.length)].map(() => Array(puzzle[0].length).fill(' '))) => {
     if (!restWords.length) return result
 
     const [w, ...ws] = restWords
@@ -340,31 +348,22 @@ export const crossword = file => {
       const { direction, x, y, count } = restLines[index]
       const board = cloneDeep(result)
 
-      if (direction === 0) {
-        for (let i = 0; i < count; i++) {
-          const target = board[y][x + i]
-          if (target !== ' ' && w[i] !== target) { continue outer } 
-        }
-        for (let i = 0; i < count; i++) {
-          board[y][x + i] = w[i]
-        }
-      } else {
-        for (let i = 0; i < count; i++) {
-          const target = board[y + i][x]
-          if (target !== ' ' && w[i] !== target) { continue outer }
-        }
-        for (let i = 0; i < count; i++) {
-          board[y + i][x] = w[i]
-        }
+      if (direction === 0) for (let i = 0; i < count; i++) {
+        if (board[y][x + i] !== ' ' && w[i] !== board[y][x + i]) { continue outer } 
+        board[y][x + i] = w[i]
+      }
+      else for (let i = 0; i < count; i++) {
+        if (board[y + i][x] !== ' ' && w[i] !== board[y + i][x]) { continue outer }
+        board[y + i][x] = w[i]
       }
 
-      const found = attempt(ws, restLines.filter((_, i) => i !== index), board)
+      const found = solve(ws, restLines.filter((_, i) => i !== index), board)
       if (found) return found
     }
 
     return null
   }
 
-  const result = attempt()
+  const result = solve()
   return result ? result.map(e => e.join('')).join('\n') : null
 }

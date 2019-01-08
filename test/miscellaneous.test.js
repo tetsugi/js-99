@@ -1,5 +1,5 @@
 import {
-  queens, knightsTour, fullWords, vonKoch, puzzle, regular, crossword
+  queens, knightsTour, fullWords, vonKoch, puzzle, regular, crossword, identifier
 } from '../src/miscellaneous'
 
 import fs from 'fs'

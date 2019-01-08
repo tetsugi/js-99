@@ -25,7 +25,7 @@ export const elementAt = (list, index) => list[index - 1]
  * @param {any[]|string} list 
  * @returns {number} 配列の長さ
  */
-export const length = list => [...list].fill(1).reduce((a, c) => a + c, 0)
+export const length = list => [...list].reduce(a => a + 1, 0)
 
 /**
  * 配列や文字列を逆順にして返す

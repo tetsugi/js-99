@@ -94,7 +94,8 @@ export const phi = n => primeFactorsMult(n).map(([p, m]) => (p - 1) * p ** (m - 
  * @param  {...any} args 関数に渡す引数
  * @returns {number} 実行時間
  */
-export const time = (f, ...args) => {
+export const time = process.env.NODE_ENV !== 'production' 
+? (f, ...args) => {
   const perf = typeof(performance) === 'undefined' ? require('perf_hooks').performance : performance
 
   const t0 = perf.now()
@@ -102,7 +103,14 @@ export const time = (f, ...args) => {
   const t1 = perf.now()
   
   return t1 - t0
-}
+} 
+: (f, ...args) => {
+  const t0 = performance.now()
+  f(...args)
+  const t1 = performance.now()
+  
+  return t1 - t0
+} 
 
 /**
  * 範囲内の素数を返す
