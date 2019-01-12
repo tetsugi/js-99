@@ -210,18 +210,22 @@ export default class Graph {
   }
 
   /**
+   * ある頂点の次数を返す
+   * @param {string} label 頂点のラベル
+   * @returns {number} 次数
+   */
+  degree(label) {
+    const { from, to } = this[label]
+    return Object.keys(from).length + Object.keys(to).length
+  }
+
+  /**
    * Welsh-Powellの頂点彩色アルゴリズムで彩色する
    * @returns {any} 彩色後のノードと対応する数字の対応表
    */
   paint() {
     const result = {}
-
-    const degree = key => {
-      const { from, to } = this[key]
-      return Object.keys(from).length + Object.keys(to).length
-    }
-
-    const keys = Object.keys(this).sort((a, b) => degree(a) - degree(b))
+    const keys = Object.keys(this).sort((a, b) => this.degree(a) - this.degree(b))
 
     keys.forEach(key => {
       const { from, to } = this[key]
@@ -321,13 +325,8 @@ export default class Graph {
     return result
   }
 
-  /**
-   * ある頂点の次数を返す
-   * @param {string} label 頂点のラベル
-   * @returns {number} 次数
-   */
-  degree(label) {
-    const {from, to} = this[label]
-    return Object.keys(from).length + Object.keys(to).length
+  f(label) {
+    const { from, to } = this[label]
+    return Object.keys(from).length
   }
 }

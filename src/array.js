@@ -401,10 +401,10 @@ export const lfsort = list => {
 }
 
 /**
- * 全ての要素を使った順列を返す
+ * 配列からn個選んで得られる順列を返す
  * @param {any[]} list 順列を求めるリスト
  * @param {number} n 選ぶ要素数
- * @returns {IterableIterator<any[]>} 全ての要素を使った順列
+ * @returns {IterableIterator<any[]>} 配列からn個選んで得られる順列
  */
 export function* permutations(list, n = list.length) {
   if (n <= 1) yield list.slice()

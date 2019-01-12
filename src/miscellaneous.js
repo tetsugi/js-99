@@ -1,6 +1,6 @@
 import { isEqual, cloneDeep, findIndex } from 'lodash'
 
-import { permutations, range, combinations, lfsort } from './array'
+import { permutations, combinations, lfsort } from './array'
 import Graph from './Graph'
 
 /**
@@ -111,15 +111,17 @@ export function* knightsTour([x, y] = [1, 1], [width, height] = [8, 8], {isClose
   const next = (i, j) => destinations(i, j)
     .filter(([y, x]) => x >= 0 && x < width && y >= 0 && y < height && board[y][x] >= 0)
 
+  /** 現在までにナイトが辿った経路 */
+  const route = []
+
   /**
    * ナイトを巡歴させる
    * @param {number} i y座標
    * @param {number} j x座標
-   * @param {number[][]} route 現在までにナイトが辿った経路
    * @param {number} count 何巡目か
    * @returns {IterableIterator<number[][]>} ナイトの辿った経路
    */
-  function* generate(i = y, j = x, route = [], count = 0) {
+  function* generate(i = y, j = x, count = 0) {
     route[count++] = [j, i]
 
     if (!isClosed && count === width * height) {
@@ -141,7 +143,7 @@ export function* knightsTour([x, y] = [1, 1], [width, height] = [8, 8], {isClose
       if (found) yield route.map(([x, y]) => [x + 1, y + 1])
     } 
     else for (const [nextY, nextX] of nextRoutes) {
-      yield* generate(nextY, nextX, route, count)
+      yield* generate(nextY, nextX, count)
     }
 
     board[i][j] = 1
@@ -157,11 +159,13 @@ export function* knightsTour([x, y] = [1, 1], [width, height] = [8, 8], {isClose
  * @returns {[number[], number[]][]} 頂点のラベルと各辺のコスト
  */
 export function* vonKoch(edges) {
-  for (const nodes of permutations(range(1, edges.length + 1))) {
-    const degrees = edges.map(([from, to]) => Math.abs(nodes[from - 1] - nodes[to - 1]))
-    const isFound = degrees.filter((e, i, self) => self.indexOf(e) === i).length === edges.length
+  const numbers = [...Array(edges.length + 1)].map((_, i) => i + 1)
 
-    if (isFound) yield [nodes, degrees]
+  for (const nodes of permutations(numbers)) {
+    const costs = edges.map(([from, to]) => Math.abs(nodes[from - 1] - nodes[to - 1]))
+    const isFound = costs.filter((e, i, self) => self.indexOf(e) === i).length === edges.length
+
+    if (isFound) yield [nodes, costs]
   }
 }
 
@@ -195,7 +199,7 @@ export function* puzzle(numbers) {
   function* generate(numbers) {
     if (numbers.length === 1) return yield [numbers[0] + '', numbers[0], '_']
 
-    for (const i of range(1, numbers.length - 1)) {
+    for (let i = 1; i < numbers.length; i++) {
       const [left, right] = splitAt(numbers, i).map(e => [...generate(e)])
       const operators = [['+', add], ['-', sub], ['*', mul], ['/', div]]
 
@@ -205,13 +209,11 @@ export function* puzzle(numbers) {
           (ops === '*' && (opsr === '*' || opsr === '/'))) continue
 
         const expression = `${ 
-          (opsl !== '_' && 
-          (ops === '*' || ops === '/') && 
+          ((ops === '*' || ops === '/') && 
           (opsl === '+' || opsl === '-')) ? `(${sl})` : sl 
         } ${ ops } ${
-          (opsr !== '_' && 
-          ((ops === '-' && opsr !== '*' && opsr !== '/') || (ops === '*' && (opsr === '+' || opsr === '-')) 
-          || ops === '/')) ? `(${sr})` : sr
+          (((ops === '-' || ops === '*') && (opsr === '+' || opsr === '-'))
+          || (ops === '/' && opsr !== '_')) ? `(${sr})` : sr
         }`
 
         yield [expression, op(vl, vr), ops]
@@ -219,7 +221,7 @@ export function* puzzle(numbers) {
     }
   }
 
-  for (const i of range(1, numbers.length - 1)) {
+  for (let i = 1; i < numbers.length; i++) {
     const [left, right] = splitAt(numbers, i).map(e => [...generate(e)])
     
     for (const [sl, vl,] of left) for (const [sr, vr,] of right) {
@@ -238,10 +240,6 @@ export function* puzzle(numbers) {
 export function* regular(n, k) {
   // n * kが2で割り切れないと辺が余るのでk-正則になり得ない
   if (n * k % 2 === 1 || n <= k || n < 0 || k < 0) return
-  
-  const labels = range(1, n)
-  const graph = new Graph(labels)
-  for (let i = 2; i < k + 2; i++) { graph.connect(1, i) }
 
   /**
    * k-正則グラフを探す
@@ -250,20 +248,20 @@ export function* regular(n, k) {
    * @param {number[]} rest 残りの頂点のラベル
    * @returns {IterableIterator<Graph>} k-正則グラフ
    */
-  function* generate(graph, target, rest) {
+  function* generate(graph, rest) {
+    const [target, ...rs] = rest
     const degree = graph.degree(target)
     const done = degree === k
 
-    if (!rest.length) { 
+    if (!rs.length) { 
       if (done) yield graph
       return
     }
 
-    const [, ...rs] = rest
-    if (done) { return yield* generate(graph, target + 1, rs) }
-    if (k - degree > rest.length) return
+    if (done) { return yield* generate(graph, rs) }
+    if (k - degree > rs.length) return
 
-    const combi = combinations(rest, k - degree)
+    const combi = combinations(rs, k - degree)
       .map(x => [x, x.map(y => graph.degree(y))])
       .filter(([,x], i, self) => self.findIndex(([,y]) => isEqual(x, y)) === i)
       .map(([e,]) => e)
@@ -271,12 +269,16 @@ export function* regular(n, k) {
     for (const selections of combi) {
       const g = graph.copy()
       selections.forEach(selection => g.connect(target, selection))
-      yield* generate(g, target + 1, rs)
+      yield* generate(g, rs)
     }
   }
 
-  const [,, ...rest] = labels
-  yield* generate(graph, 2, rest)
+  const labels = [...Array(n)].map((_, i) => i + 1)
+  const graph = new Graph(labels)
+  for (let i = 2; i < k + 2; i++) { graph.connect(1, i) }
+
+  const [, ...rest] = labels
+  yield* generate(graph, rest)
 }
 
 /** 数字の英単語 */
