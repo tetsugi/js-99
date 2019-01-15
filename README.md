@@ -1,5 +1,8 @@
 # JavaScriptの問題集(99 Haskell Problemsの翻訳)と解答例・解説
 
+[![Build Status](https://travis-ci.org/tetsugi/js-99.svg?branch=master)](https://travis-ci.org/tetsugi/js-99)
+[![Coverage Status](https://coveralls.io/repos/github/tetsugi/js-99/badge.svg?branch=master)](https://coveralls.io/github/tetsugi/js-99?branch=master)
+
 [H-99: Ninety-Nine Haskell Problems](https://wiki.haskell.org/H-99:_Ninety-Nine_Haskell_Problems)というHaskellの問題集があります。  
 元はPrologの問題集だったそうです。  
 
